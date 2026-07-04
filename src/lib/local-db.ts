@@ -1,0 +1,180 @@
+import type { Tool, ToolDraft, Project, ProjectDraft, StackItem, StackLane } from '@/types'
+import { DEFAULT_TOOLS } from './seed-data'
+import { logger } from './logger'
+
+const uid = () => crypto.randomUUID()
+const now = () => new Date().toISOString()
+
+function read<T>(key: string): T[] {
+  try { return JSON.parse(localStorage.getItem(key) || '[]') } catch { return [] }
+}
+function write<T>(key: string, data: T[]) {
+  localStorage.setItem(key, JSON.stringify(data))
+}
+
+let seeded = false
+
+export async function seedDefaults(userId: string) {
+  if (seeded) return
+  const existing = read<Tool>('local_tools')
+  const defaultNames = new Set(DEFAULT_TOOLS.map((t) => t.name.toLowerCase()))
+
+  // Migration: mark existing default tools with isDefault flag
+  let migrated = false
+  const migratedTools = existing.map((t) => {
+    if (!t.isDefault && defaultNames.has(t.name.toLowerCase())) {
+      migrated = true
+      return { ...t, isDefault: true }
+    }
+    return t
+  })
+  if (migrated) {
+    write('local_tools', migratedTools)
+    logger.info('SEED', `Migrated ${existing.length} tools with isDefault flag`)
+  }
+
+  const existingNames = new Set(migratedTools.map((t) => t.name.toLowerCase()))
+  const toAdd: Tool[] = DEFAULT_TOOLS
+    .filter((t) => !existingNames.has(t.name.toLowerCase()))
+    .map((t) => ({ ...t, $id: uid(), $createdAt: now(), isDefault: true }))
+  if (toAdd.length > 0) {
+    write('local_tools', [...migratedTools, ...toAdd])
+    logger.info('SEED', `Seeded ${toAdd.length} default tools for user ${userId}`)
+  } else {
+    logger.debug('SEED', 'No new defaults to seed')
+  }
+  seeded = true
+}
+
+// ─── Tools ───────────────────────────────────────────────────────────────────
+export async function getTools(userId: string): Promise<Tool[]> {
+  const all = read<Tool>('local_tools')
+  const filtered = all.filter((t) => t.userId === userId || t.isPublic)
+  logger.debug('DB', `getTools(${userId}) → ${filtered.length} tools`)
+  return filtered
+}
+
+export async function createTool(userId: string, draft: ToolDraft): Promise<Tool> {
+  const tool: Tool = {
+    $id: uid(),
+    $createdAt: now(),
+    userId,
+    name: draft.name,
+    description: draft.description ?? '',
+    category: draft.category ?? 'other',
+    url: draft.url ?? '',
+    icon: draft.icon ?? '',
+    color: draft.color ?? '#22c55e',
+    tags: draft.tags ?? [],
+    isPublic: draft.isPublic ?? false,
+  }
+  const all = read<Tool>('local_tools')
+  all.push(tool)
+  write('local_tools', all)
+  logger.info('DB', `createTool: "${tool.name}" (${tool.$id})`)
+  return tool
+}
+
+export async function updateTool(toolId: string, data: Partial<ToolDraft>): Promise<Tool> {
+  const all = read<Tool>('local_tools')
+  const idx = all.findIndex((t) => t.$id === toolId)
+  if (idx === -1) throw new Error('Tool not found')
+  all[idx] = { ...all[idx], ...data }
+  if (data.tags) all[idx].tags = data.tags
+  write('local_tools', all)
+  logger.info('DB', `updateTool: "${all[idx].name}" (${toolId})`, data)
+  return all[idx]
+}
+
+export async function deleteTool(toolId: string) {
+  const all = read<Tool>('local_tools')
+  const tool = all.find((t) => t.$id === toolId)
+  write('local_tools', all.filter((t) => t.$id !== toolId))
+  logger.info('DB', `deleteTool: "${tool?.name ?? toolId}" (${toolId})`)
+}
+
+// ─── Projects ────────────────────────────────────────────────────────────────
+export async function getProjects(userId: string): Promise<Project[]> {
+  const filtered = read<Project>('local_projects').filter((p) => p.userId === userId)
+  logger.debug('DB', `getProjects(${userId}) → ${filtered.length} projects`)
+  return filtered
+}
+
+export async function createProject(userId: string, draft: ProjectDraft): Promise<Project> {
+  const project: Project = {
+    $id: uid(),
+    $createdAt: now(),
+    userId,
+    name: draft.name,
+    description: draft.description ?? '',
+    color: draft.color ?? '#22c55e',
+    notes: draft.notes ?? '',
+  }
+  const all = read<Project>('local_projects')
+  all.push(project)
+  write('local_projects', all)
+  logger.info('DB', `createProject: "${project.name}" (${project.$id})`)
+  return project
+}
+
+export async function updateProject(projectId: string, data: Partial<ProjectDraft>): Promise<Project> {
+  const all = read<Project>('local_projects')
+  const idx = all.findIndex((p) => p.$id === projectId)
+  if (idx === -1) throw new Error('Project not found')
+  all[idx] = { ...all[idx], ...data }
+  write('local_projects', all)
+  logger.info('DB', `updateProject: "${all[idx].name}" (${projectId})`, data)
+  return all[idx]
+}
+
+export async function deleteProject(projectId: string) {
+  const all = read<Project>('local_projects')
+  const project = all.find((p) => p.$id === projectId)
+  write('local_projects', all.filter((p) => p.$id !== projectId))
+  logger.info('DB', `deleteProject: "${project?.name ?? projectId}" (${projectId})`)
+}
+
+// ─── Stack items ─────────────────────────────────────────────────────────────
+export async function getStackItems(projectId: string): Promise<StackItem[]> {
+  const filtered = read<StackItem>('local_stack').filter((s) => s.projectId === projectId)
+  logger.debug('DB', `getStackItems(${projectId}) → ${filtered.length} items`)
+  return filtered
+}
+
+export async function addToStack(
+  userId: string,
+  projectId: string,
+  toolId: string,
+  lane: StackLane,
+  order: number
+): Promise<StackItem> {
+  const item: StackItem = {
+    $id: uid(),
+    userId,
+    projectId,
+    toolId,
+    lane,
+    order,
+  }
+  const all = read<StackItem>('local_stack')
+  all.push(item)
+  write('local_stack', all)
+  logger.info('DB', `addToStack: tool=${toolId} → lane=${lane} order=${order}`)
+  return item
+}
+
+export async function updateStackItem(itemId: string, data: { lane?: StackLane; order?: number }) {
+  const all = read<StackItem>('local_stack')
+  const idx = all.findIndex((s) => s.$id === itemId)
+  if (idx === -1) throw new Error('Stack item not found')
+  all[idx] = { ...all[idx], ...data }
+  write('local_stack', all)
+  logger.info('DB', `updateStackItem: ${itemId}`, data)
+  return all[idx]
+}
+
+export async function removeFromStack(itemId: string) {
+  const all = read<StackItem>('local_stack')
+  write('local_stack', all.filter((s) => s.$id !== itemId))
+  logger.info('DB', `removeFromStack: ${itemId}`)
+}
