@@ -51,7 +51,7 @@ export default function MarkdownEditor({ value, onChange, projectName, tools }: 
   }
 
   function handleDownload() {
-    const toolsList = tools.map((t) => `- **${t.name}** (${t.category}${t.lane ? ` — ${t.lane}` : ''})`).join('\n')
+    const toolsList = tools.map((t) => `- **${t.name}** (${t.category || 'other'}${t.lane ? ` — ${t.lane}` : ''})`).join('\n')
     const content = `# ${projectName}\n\n## Tech Stack\n\n${toolsList || '_No tools added yet_'}\n\n## Notes\n\n${value || '_No notes yet_'}\n`
     const blob = new Blob([content], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)

@@ -50,16 +50,20 @@ interface Props {
 }
 
 export default function CategoryToolPanel({ tools, onSelect }: Props) {
-  const [allExpanded, setAllExpanded] = useState(false)
+  const [expandedCats, setExpandedCats] = useState<Set<ToolCategory>>(new Set())
   const [search, setSearch] = useState('')
 
   const categorized = useMemo(() => {
     const map = new Map<ToolCategory, Tool[]>()
     CATEGORIES.forEach((c) => map.set(c, []))
     tools.forEach((t) => {
-      const cat = t.category || 'other'
-      if (!map.has(cat)) map.set(cat, [])
-      map.get(cat)!.push(t)
+      const cats = t.categories || ['other']
+      cats.forEach((cat) => {
+        if (!map.has(cat)) map.set(cat, [])
+        if (!map.get(cat)!.some((existing) => existing.$id === t.$id)) {
+          map.get(cat)!.push(t)
+        }
+      })
     })
     return map
   }, [tools])
@@ -71,15 +75,38 @@ export default function CategoryToolPanel({ tools, onSelect }: Props) {
     CATEGORIES.forEach((c) => map.set(c, []))
     tools.forEach((t) => {
       if (t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q) || t.tags.some((tag) => tag.includes(q))) {
-        const cat = t.category || 'other'
-        if (!map.has(cat)) map.set(cat, [])
-        map.get(cat)!.push(t)
+        const cats = t.categories || ['other']
+        cats.forEach((cat) => {
+          if (!map.has(cat)) map.set(cat, [])
+          if (!map.get(cat)!.some((existing) => existing.$id === t.$id)) {
+            map.get(cat)!.push(t)
+          }
+        })
       }
     })
     return map
   }, [tools, search, categorized])
 
   const activeCategories = CATEGORIES.filter((c) => (filtered.get(c) || []).length > 0)
+
+  function toggleCat(cat: ToolCategory) {
+    setExpandedCats((prev) => {
+      const next = new Set(prev)
+      if (next.has(cat)) next.delete(cat)
+      else next.add(cat)
+      return next
+    })
+  }
+
+  function expandAll() {
+    setExpandedCats(new Set(activeCategories))
+  }
+
+  function collapseAll() {
+    setExpandedCats(new Set())
+  }
+
+  const allOpen = activeCategories.length > 0 && activeCategories.every((c) => expandedCats.has(c))
 
   return (
     <div className="flex flex-col h-full">
@@ -100,10 +127,10 @@ export default function CategoryToolPanel({ tools, onSelect }: Props) {
       <div className="flex items-center justify-between px-4 pb-2">
         <p className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">Categories</p>
         <button
-          onClick={() => setAllExpanded(!allExpanded)}
+          onClick={allOpen ? collapseAll : expandAll}
           className="text-[10px] text-neutral-500 hover:text-accent transition-colors font-medium"
         >
-          {allExpanded ? 'Collapse all' : 'Expand all'}
+          {allOpen ? 'Collapse all' : 'Expand all'}
         </button>
       </div>
 
@@ -111,16 +138,13 @@ export default function CategoryToolPanel({ tools, onSelect }: Props) {
       <div className="flex-1 overflow-y-auto scrollbar-thin px-3 pb-3 space-y-1">
         {activeCategories.map((cat) => {
           const items = filtered.get(cat) || []
-          const isExpanded = allExpanded
+          const isExpanded = expandedCats.has(cat)
 
           return (
             <div key={cat} className="rounded-xl border border-white/[0.04] overflow-hidden">
               {/* Category header */}
               <button
-                onClick={() => {
-                  const newExpanded = !isExpanded
-                  setAllExpanded(newExpanded)
-                }}
+                onClick={() => toggleCat(cat)}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-neutral-300 hover:bg-surface-300 transition-colors"
               >
                 {isExpanded ? <ChevronDown size={12} className="text-neutral-500" /> : <ChevronRight size={12} className="text-neutral-500" />}

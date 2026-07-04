@@ -35,7 +35,7 @@ export default function AddToolModal({ onClose, editTool }: Props) {
   const [form, setForm] = useState<ToolDraft>({
     name:        editTool?.name ?? '',
     description: editTool?.description ?? '',
-    category:    editTool?.category ?? 'other',
+    categories:  editTool?.categories ?? ['other'],
     url:         editTool?.url ?? '',
     icon:        editTool?.icon ?? '',
     color:       editTool?.color ?? '#22c55e',
@@ -210,20 +210,28 @@ export default function AddToolModal({ onClose, editTool }: Props) {
 
           {/* Category */}
           <div>
-            <label className="block text-xs font-medium text-neutral-400 mb-2">Category</label>
+            <label className="block text-xs font-medium text-neutral-400 mb-2">Category <span className="text-neutral-600 font-normal">(multi-select)</span></label>
             <div className="flex flex-wrap gap-1.5">
-              {CATEGORIES.map(([val, label]) => (
-                <button
-                  key={val} type="button"
-                  onClick={() => set('category', val)}
-                  className={cn(
-                    'px-3 py-1.5 text-xs rounded-lg border transition-all',
-                    form.category === val
-                      ? 'bg-accent/15 text-accent border-accent/30'
-                      : 'border-surface-400 text-neutral-500 hover:border-surface-600 hover:text-neutral-300'
-                  )}
-                >{label}</button>
-              ))}
+              {CATEGORIES.map(([val, label]) => {
+                const isSelected = form.categories.includes(val)
+                return (
+                  <button
+                    key={val} type="button"
+                    onClick={() => {
+                      const next = isSelected
+                        ? form.categories.filter((c) => c !== val)
+                        : [...form.categories, val]
+                      set('categories', next.length > 0 ? next : ['other'])
+                    }}
+                    className={cn(
+                      'px-3 py-1.5 text-xs rounded-lg border transition-all',
+                      isSelected
+                        ? 'bg-accent/15 text-accent border-accent/30'
+                        : 'border-surface-400 text-neutral-500 hover:border-surface-600 hover:text-neutral-300'
+                    )}
+                  >{label}</button>
+                )
+              })}
             </div>
           </div>
 

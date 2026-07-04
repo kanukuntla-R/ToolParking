@@ -48,7 +48,7 @@ export default function ParkingPage() {
       if (activeFilter === 'mine') {
         matchCat = !t.isDefault
       } else if (activeFilter !== 'all') {
-        matchCat = t.category === activeFilter
+        matchCat = t.categories?.includes(activeFilter as ToolCategory) ?? false
       }
       const q = searchQuery.toLowerCase()
       const matchSearch = !q || t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q) || t.tags.some((tag) => tag.includes(q))

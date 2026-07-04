@@ -9,7 +9,7 @@ import {
 import { Plus, ChevronDown, Trash2, Layers, ParkingSquare, FileText } from 'lucide-react'
 import { getProjects, getTools, getStackItems, addToStack, deleteProject, updateStackItem, updateProject } from '@/lib/db'
 import { useAppStore } from '@/store'
-import { CATEGORY_TO_LANE, ALL_LANES, cn } from '@/lib/utils'
+import { getCategoryLane, ALL_LANES, cn } from '@/lib/utils'
 import StackLane from '@/components/projects/StackLane'
 import CreateProjectModal from '@/components/projects/CreateProjectModal'
 import CategoryToolPanel from '@/components/ui/CategoryToolPanel'
@@ -234,7 +234,7 @@ export default function ProjectsPage() {
   // Mobile: add tool to stack by tapping (auto-assigns lane by category)
   async function handleMobileAddToStack(tool: Tool) {
     if (!activeProject || !user) return
-    const lane = CATEGORY_TO_LANE[tool.category] || 'Other'
+    const lane = getCategoryLane(tool.categories) || 'Other'
     const order = laneMap[lane]?.length ?? 0
     const tempItem: StackItem = {
       $id: `temp-${Date.now()}`,
@@ -458,7 +458,7 @@ export default function ProjectsPage() {
                 projectName={currentProject?.name || 'Project'}
                 tools={hydratedStack.map((item) => ({
                   name: item.tool?.name || 'Unknown',
-                  category: item.tool?.category || 'other',
+                  category: item.tool?.categories?.[0] || 'other',
                   lane: item.lane,
                 }))}
               />
@@ -483,7 +483,7 @@ export default function ProjectsPage() {
                     projectName={currentProject.name}
                     tools={hydratedStack.map((item) => ({
                       name: item.tool?.name || 'Unknown',
-                      category: item.tool?.category || 'other',
+                      category: item.tool?.categories?.[0] || 'other',
                       lane: item.lane,
                     }))}
                   />

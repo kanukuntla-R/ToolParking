@@ -15,7 +15,7 @@ export interface Tool {
   $createdAt: string
   name: string
   description: string
-  category: ToolCategory
+  categories: ToolCategory[]
   url: string
   icon: string          // emoji or short symbol
   color: string         // hex, used for icon bg tint

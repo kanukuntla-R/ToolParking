@@ -15,23 +15,43 @@ function write<T>(key: string, data: T[]) {
 let seeded = false
 
 export async function seedDefaults(userId: string) {
-  if (seeded) return
   const existing = read<Tool>('local_tools')
-  const defaultNames = new Set(DEFAULT_TOOLS.map((t) => t.name.toLowerCase()))
+  const defaultMap = new Map(DEFAULT_TOOLS.map((t) => [t.name.toLowerCase(), t]))
 
-  // Migration: mark existing default tools with isDefault flag
+  // Always migrate icons and categories for existing default tools
   let migrated = false
   const migratedTools = existing.map((t) => {
-    if (!t.isDefault && defaultNames.has(t.name.toLowerCase())) {
+    const updated = { ...t }
+    // Migrate category -> categories
+    if (!updated.categories && (updated as any).category) {
+      updated.categories = [(updated as any).category]
       migrated = true
-      return { ...t, isDefault: true }
     }
-    return t
+    if (!updated.categories) {
+      updated.categories = ['other']
+      migrated = true
+    }
+    // Update icon if it's empty or was a fallback letter
+    const defaultTool = defaultMap.get(t.name.toLowerCase())
+    if (defaultTool && t.isDefault) {
+      if (!t.icon || t.icon.length <= 2) {
+        updated.icon = defaultTool.icon
+        migrated = true
+      }
+      // Update categories to match seed data
+      if (defaultTool.categories && JSON.stringify(updated.categories) !== JSON.stringify(defaultTool.categories)) {
+        updated.categories = defaultTool.categories
+        migrated = true
+      }
+    }
+    return updated
   })
   if (migrated) {
     write('local_tools', migratedTools)
-    logger.info('SEED', `Migrated ${existing.length} tools with isDefault flag`)
+    logger.info('SEED', `Migrated icons for default tools`)
   }
+
+  if (seeded) return
 
   const existingNames = new Set(migratedTools.map((t) => t.name.toLowerCase()))
   const toAdd: Tool[] = DEFAULT_TOOLS
@@ -61,7 +81,7 @@ export async function createTool(userId: string, draft: ToolDraft): Promise<Tool
     userId,
     name: draft.name,
     description: draft.description ?? '',
-    category: draft.category ?? 'other',
+    categories: draft.categories ?? ['other'],
     url: draft.url ?? '',
     icon: draft.icon ?? '',
     color: draft.color ?? '#22c55e',
