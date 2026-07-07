@@ -87,19 +87,19 @@ export default function AddToolModal({ onClose, editTool }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center md:p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div className="glass rounded-t-2xl md:rounded-2xl border border-white/[0.06] w-full max-w-md animate-slide-up overflow-hidden glow-green-sm max-h-[92vh] md:max-h-[85vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center md:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="rounded-t-2xl md:rounded-2xl border border-white/[0.06] w-full max-w-md animate-slide-up overflow-hidden glow-green-sm max-h-[92vh] md:max-h-[85vh] flex flex-col bg-surface-100">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.04] shrink-0">
-          <h2 className="text-sm font-semibold text-white">{isEditing ? 'Edit tool' : 'Add tool to parking'}</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-400 text-neutral-500 transition-colors">
+          <h2 className="text-sm font-semibold text-neutral-100">{isEditing ? 'Edit tool' : 'Add tool to parking'}</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-200 text-neutral-500 transition-colors">
             <X size={16} />
           </button>
         </div>
 
         {/* Mobile drag indicator */}
         <div className="md:hidden flex justify-center py-2 shrink-0">
-          <div className="w-8 h-1 rounded-full bg-surface-500" />
+          <div className="w-8 h-1 rounded-full bg-surface-400" />
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto scrollbar-thin flex-1">
@@ -109,7 +109,7 @@ export default function AddToolModal({ onClose, editTool }: Props) {
             <input
               required value={form.name} onChange={(e) => set('name', e.target.value)}
               placeholder="e.g. Next.js"
-              className="w-full px-3 py-2.5 text-sm rounded-xl border border-surface-400 bg-surface-200 text-white placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/40 transition-all"
+              className="w-full px-3 py-2.5 text-sm rounded-xl border border-neutral-300 bg-surface-200 text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/40 transition-all"
             />
           </div>
 
@@ -118,7 +118,7 @@ export default function AddToolModal({ onClose, editTool }: Props) {
             <label className="block text-xs font-medium text-neutral-400 mb-1.5">Icon</label>
             {/* Preview */}
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center border border-surface-400 bg-surface-200 overflow-hidden">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center border border-neutral-300 bg-surface-200 overflow-hidden">
                 {resolvedIcon ? (
                   <img src={resolvedIcon} alt="icon" className="w-8 h-8 object-contain"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
@@ -148,7 +148,7 @@ export default function AddToolModal({ onClose, editTool }: Props) {
                     'flex items-center gap-1 px-2.5 py-1.5 text-[10px] rounded-lg border transition-all font-medium',
                     iconSource === s.id
                       ? 'bg-accent/15 text-accent border-accent/30'
-                      : 'border-surface-400 text-neutral-500 hover:border-surface-600'
+                      : 'border-neutral-300 text-neutral-600 hover:border-neutral-400 hover:text-neutral-800'
                   )}
                 >
                   {s.icon}
@@ -162,13 +162,13 @@ export default function AddToolModal({ onClose, editTool }: Props) {
               <input
                 value={customIconUrl} onChange={(e) => setCustomIconUrl(e.target.value)}
                 placeholder="https://example.com/icon.png"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-surface-400 bg-surface-200 text-white placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/40 transition-all"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-neutral-300 bg-surface-200 text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/40 transition-all"
               />
             )}
 
             {iconSource !== 'custom' && form.url && (
-              <p className="text-[10px] text-neutral-600">
-                Auto-fetched from <span className="text-neutral-500">{new URL(form.url).hostname}</span>
+              <p className="text-[10px] text-neutral-500">
+                Auto-fetched from <span className="text-neutral-400">{new URL(form.url).hostname}</span>
               </p>
             )}
           </div>
@@ -179,9 +179,9 @@ export default function AddToolModal({ onClose, editTool }: Props) {
             <div className="flex items-center gap-2">
               <input
                 type="color" value={form.color} onChange={(e) => set('color', e.target.value)}
-                className="w-8 h-8 rounded-lg cursor-pointer border border-surface-400 bg-surface-200"
+                className="w-8 h-8 rounded-lg cursor-pointer border border-neutral-300 bg-surface-200"
               />
-              <span className="text-xs text-neutral-600 font-mono">{form.color}</span>
+              <span className="text-xs text-neutral-500 font-mono">{form.color}</span>
             </div>
           </div>
 
@@ -191,7 +191,7 @@ export default function AddToolModal({ onClose, editTool }: Props) {
             <input
               value={form.description} onChange={(e) => set('description', e.target.value)}
               placeholder="What does this tool do?"
-              className="w-full px-3 py-2.5 text-sm rounded-xl border border-surface-400 bg-surface-200 text-white placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/40 transition-all"
+              className="w-full px-3 py-2.5 text-sm rounded-xl border border-neutral-300 bg-surface-200 text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/40 transition-all"
             />
           </div>
 
@@ -202,15 +202,15 @@ export default function AddToolModal({ onClose, editTool }: Props) {
               <input
                 type="url" value={form.url} onChange={(e) => set('url', e.target.value)}
                 placeholder="https://... (icon auto-fetches from domain)"
-                className="w-full pl-3 pr-8 py-2.5 text-sm rounded-xl border border-surface-400 bg-surface-200 text-white placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/40 transition-all"
+                className="w-full pl-3 pr-8 py-2.5 text-sm rounded-xl border border-surface-400 bg-surface-200 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/40 transition-all"
               />
-              <ExternalLink size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600" />
+              <ExternalLink size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500" />
             </div>
           </div>
 
           {/* Category */}
           <div>
-            <label className="block text-xs font-medium text-neutral-400 mb-2">Category <span className="text-neutral-600 font-normal">(multi-select)</span></label>
+            <label className="block text-xs font-medium text-neutral-400 mb-2">Category <span className="text-neutral-500 font-normal">(multi-select)</span></label>
             <div className="flex flex-wrap gap-1.5">
               {CATEGORIES.map(([val, label]) => {
                 const isSelected = form.categories.includes(val)
@@ -227,7 +227,7 @@ export default function AddToolModal({ onClose, editTool }: Props) {
                       'px-3 py-1.5 text-xs rounded-lg border transition-all',
                       isSelected
                         ? 'bg-accent/15 text-accent border-accent/30'
-                        : 'border-surface-400 text-neutral-500 hover:border-surface-600 hover:text-neutral-300'
+                        : 'border-neutral-300 text-neutral-600 hover:border-neutral-400 hover:text-neutral-800'
                     )}
                   >{label}</button>
                 )
@@ -250,7 +250,7 @@ export default function AddToolModal({ onClose, editTool }: Props) {
             <input
               value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={addTag}
               placeholder="Type tag and press Enter"
-              className="w-full px-3 py-2.5 text-sm rounded-xl border border-surface-400 bg-surface-200 text-white placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/40 transition-all"
+              className="w-full px-3 py-2.5 text-sm rounded-xl border border-neutral-300 bg-surface-200 text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/40 transition-all"
             />
           </div>
 
@@ -264,7 +264,7 @@ export default function AddToolModal({ onClose, editTool }: Props) {
             </div>
             <div>
               <p className="text-xs font-medium text-neutral-300">Make public</p>
-              <p className="text-xs text-neutral-600">Visible to all Tool Parking users</p>
+              <p className="text-xs text-neutral-500">Visible to all Tool Parking users</p>
             </div>
           </label>
 
@@ -272,7 +272,7 @@ export default function AddToolModal({ onClose, editTool }: Props) {
 
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose}
-              className="flex-1 px-4 py-3 md:py-2.5 rounded-xl border border-surface-400 text-sm text-neutral-400 hover:bg-surface-300 transition-all">
+              className="flex-1 px-4 py-3 md:py-2.5 rounded-xl border border-neutral-300 text-sm text-neutral-600 hover:bg-surface-200 transition-all">
               Cancel
             </button>
             <button type="submit" disabled={loading}

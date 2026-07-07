@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from 'next'
-import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
+import { ClerkProvider } from '@clerk/nextjs'
 import './globals.css'
 import { Providers } from '@/components/layout/Providers'
+import { clerkConfig } from '@/lib/clerk-config'
 
-const geistSans = GeistSans
 const geistMono = GeistMono
 
 export const metadata: Metadata = {
@@ -22,10 +22,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geistMono.variable} font-sans antialiased bg-surface text-neutral-200 min-h-screen`}>
-        <Providers>{children}</Providers>
-      </body>
-    </html>
+    <ClerkProvider {...clerkConfig}>
+      <html lang="en" suppressHydrationWarning>
+        <body className={`${geistMono.variable} font-sans antialiased bg-surface text-neutral-200 min-h-screen`}>
+          <Providers>{children}</Providers>
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

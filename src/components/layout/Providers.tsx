@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
 import { useAppStore } from '@/store'
 import { getCurrentUser } from '@/lib/auth'
-import { seedDefaults } from '@/lib/local-db'
 import { logger } from '@/lib/logger'
 import { Agentation } from 'agentation'
 
@@ -21,7 +20,19 @@ function AuthBootstrap() {
     getCurrentUser().then((user) => {
       setUser(user)
       logger.info('BOOT', `User set: ${user?.name ?? 'null'}`)
-      if (user) seedDefaults(user.$id)
+      // Seed default tools via API
+      if (user) {
+        fetch('/api/seed', { method: 'POST' })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              logger.info('BOOT', 'Default tools seeded')
+            }
+          })
+          .catch((err) => {
+            logger.error('BOOT', 'Failed to seed default tools', err)
+          })
+      }
     })
   }, [setUser])
   return null

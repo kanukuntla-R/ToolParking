@@ -22,23 +22,33 @@ export async function seedDefaults(userId: string) {
   let migrated = false
   const migratedTools = existing.map((t) => {
     const updated = { ...t }
-    // Migrate category -> categories
-    if (!updated.categories && (updated as any).category) {
-      updated.categories = [(updated as any).category]
-      migrated = true
-    }
-    if (!updated.categories) {
-      updated.categories = ['other']
-      migrated = true
-    }
-    // Update icon if it's empty or was a fallback letter
     const defaultTool = defaultMap.get(t.name.toLowerCase())
-    if (defaultTool && t.isDefault) {
+    
+    // If this tool matches a default tool, ensure it has the right fields
+    if (defaultTool) {
+      // Mark as default if not already
+      if (!updated.isDefault) {
+        updated.isDefault = true
+        migrated = true
+      }
+      
+      // Migrate category -> categories
+      if (!updated.categories && (updated as any).category) {
+        updated.categories = [(updated as any).category]
+        migrated = true
+      }
+      if (!updated.categories) {
+        updated.categories = ['other']
+        migrated = true
+      }
+      
+      // Update icon if it's empty or was a fallback letter
       if (!t.icon || t.icon.length <= 2) {
         updated.icon = defaultTool.icon
         migrated = true
       }
-      // Update categories to match seed data
+      
+      // Update categories to match seed data if different
       if (defaultTool.categories && JSON.stringify(updated.categories) !== JSON.stringify(defaultTool.categories)) {
         updated.categories = defaultTool.categories
         migrated = true
@@ -46,9 +56,10 @@ export async function seedDefaults(userId: string) {
     }
     return updated
   })
+  
   if (migrated) {
     write('local_tools', migratedTools)
-    logger.info('SEED', `Migrated icons for default tools`)
+    logger.info('SEED', `Migrated ${migratedTools.filter((t, i) => t !== existing[i]).length} tools`)
   }
 
   if (seeded) return
