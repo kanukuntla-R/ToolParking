@@ -77,9 +77,14 @@ export default function SettingsPage() {
   }
 
   function handleClearData() {
-    if (!confirm('Clear all local data? This cannot be undone.')) return
-    localStorage.clear()
-    logger.warn('SETTINGS', 'All local data cleared')
+    if (!confirm('Clear all your data from the database? This cannot be undone.')) return
+    
+    // Clear UI preferences from localStorage
+    localStorage.removeItem('accent-color')
+    localStorage.removeItem('user-profile')
+    localStorage.removeItem('theme')
+    
+    logger.warn('SETTINGS', 'UI preferences cleared')
     window.location.reload()
   }
 
@@ -211,20 +216,20 @@ export default function SettingsPage() {
           {activeTab === 'data' && (
             <div className="space-y-4">
               <div className="glass-card rounded-xl p-5 space-y-4">
-                <h3 className="text-sm font-semibold text-white">Local Storage</h3>
+                <h3 className="text-sm font-semibold text-white">Data Storage</h3>
                 <p className="text-xs text-neutral-500">
-                  Tool Parking stores all data locally in your browser. No data is sent to external servers in dev mode.
+                  Tool Parking uses MongoDB Atlas for secure cloud storage. Your data is encrypted and backed up automatically.
                 </p>
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
                   <Info size={14} className="text-amber-400 shrink-0" />
-                  <p className="text-xs text-amber-300">Clearing data will remove all tools, projects, and stack items.</p>
+                  <p className="text-xs text-amber-300">Clearing UI preferences will reset theme and accent color. Your tools and projects are stored in the cloud.</p>
                 </div>
                 <button
                   onClick={handleClearData}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/20 text-red-400 text-xs font-medium hover:bg-red-500/10 transition-all"
                 >
                   <Trash2 size={13} />
-                  Clear all local data
+                  Clear UI preferences
                 </button>
               </div>
 
@@ -245,7 +250,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Storage</span>
-                    <span className="font-mono text-neutral-400">localStorage</span>
+                    <span className="font-mono text-neutral-400">MongoDB Atlas</span>
                   </div>
                 </div>
               </div>

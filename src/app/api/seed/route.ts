@@ -6,17 +6,19 @@ import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
-    const securityResponse = securityHeadersMiddleware(request)
-    const user = authMiddleware(request)
+    const securityHeaders = securityHeadersMiddleware(request)
+    const authResult = await authMiddleware(request)
+    if (authResult instanceof NextResponse) return authResult
     
-    await DatabaseService.seedDefaults(user.userId)
+    const { userId } = authResult
+    await DatabaseService.seedDefaults(userId)
     
     return NextResponse.json({ 
       success: true, 
       message: 'Default tools seeded successfully' 
     }, {
       status: 200,
-      headers: securityResponse.headers
+      headers: securityHeaders
     })
   } catch (error: any) {
     logger.error('API', 'POST /api/seed failed', error)

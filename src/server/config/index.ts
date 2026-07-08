@@ -15,10 +15,5 @@ export const config = {
   cors: {
     origin: process.env.CORS_ORIGIN || '*',
     credentials: true
-  },
-  
-  // Database
-  db: {
-    localStoragePrefix: 'tool_parking_'
   }
 } as const

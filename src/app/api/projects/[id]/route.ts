@@ -13,21 +13,21 @@ export async function GET(
     const rateLimitError = rateLimitMiddleware(request)
     if (rateLimitError) return rateLimitError
     
-    const securityResponse = securityHeadersMiddleware(request)
-    const user = authMiddleware(request)
+    const securityHeaders = securityHeadersMiddleware(request)
+    const user = await authMiddleware(request)
     
     const project = await ProjectController.getById(params.id, user.userId)
     
     if (!project) {
       return NextResponse.json(
         { success: false, error: 'Project not found' },
-        { status: 404, headers: securityResponse.headers }
+        { status: 404, headers: securityHeaders }
       )
     }
     
     return NextResponse.json({ success: true, data: project }, {
       status: 200,
-      headers: securityResponse.headers
+      headers: securityHeaders
     })
   } catch (error: any) {
     logger.error('API', `GET /api/projects failed`, error)
@@ -47,15 +47,15 @@ export async function PUT(
     const rateLimitError = rateLimitMiddleware(request)
     if (rateLimitError) return rateLimitError
     
-    const securityResponse = securityHeadersMiddleware(request)
-    const user = authMiddleware(request)
+    const securityHeaders = securityHeadersMiddleware(request)
+    const user = await authMiddleware(request)
     
     const body = await request.json()
     const project = await ProjectController.update(params.id, user.userId, body)
     
     return NextResponse.json({ success: true, data: project }, {
       status: 200,
-      headers: securityResponse.headers
+      headers: securityHeaders
     })
   } catch (error: any) {
     logger.error('API', `PUT /api/projects failed`, error)
@@ -75,14 +75,14 @@ export async function DELETE(
     const rateLimitError = rateLimitMiddleware(request)
     if (rateLimitError) return rateLimitError
     
-    const securityResponse = securityHeadersMiddleware(request)
-    const user = authMiddleware(request)
+    const securityHeaders = securityHeadersMiddleware(request)
+    const user = await authMiddleware(request)
     
     await ProjectController.delete(params.id, user.userId)
     
     return NextResponse.json({ success: true, message: 'Project deleted' }, {
       status: 200,
-      headers: securityResponse.headers
+      headers: securityHeaders
     })
   } catch (error: any) {
     logger.error('API', `DELETE /api/projects failed`, error)

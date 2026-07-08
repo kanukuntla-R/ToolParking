@@ -9,8 +9,8 @@ export async function GET(request: NextRequest) {
     const rateLimitError = rateLimitMiddleware(request)
     if (rateLimitError) return rateLimitError
     
-    const securityResponse = securityHeadersMiddleware(request)
-    const user = authMiddleware(request)
+    const securityHeaders = securityHeadersMiddleware(request)
+    const user = await authMiddleware(request)
     
     const { searchParams } = new URL(request.url)
     const projectId = searchParams.get('projectId')
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     if (!projectId) {
       return NextResponse.json(
         { success: false, error: 'projectId is required' },
-        { status: 400, headers: securityResponse.headers }
+        { status: 400, headers: securityHeaders }
       )
     }
     
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({ success: true, data: stackItems }, {
       status: 200,
-      headers: securityResponse.headers
+      headers: securityHeaders
     })
   } catch (error: any) {
     logger.error('API', 'GET /api/stack failed', error)
@@ -42,8 +42,8 @@ export async function POST(request: NextRequest) {
     const rateLimitError = rateLimitMiddleware(request)
     if (rateLimitError) return rateLimitError
     
-    const securityResponse = securityHeadersMiddleware(request)
-    const user = authMiddleware(request)
+    const securityHeaders = securityHeadersMiddleware(request)
+    const user = await authMiddleware(request)
     
     const body = await request.json()
     const { projectId, toolId, lane, order } = body
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ success: true, data: stackItem }, {
       status: 201,
-      headers: securityResponse.headers
+      headers: securityHeaders
     })
   } catch (error: any) {
     logger.error('API', 'POST /api/stack failed', error)

@@ -1,3 +1,4 @@
-export { Tool, ITool } from './Tool'
-export { Project, IProject } from './Project'
-export { StackItem, IStackItem } from './StackItem'
+// Re-export MongoDB models
+export { Tool } from './Tool'
+export { Project } from './Project'
+export { StackItem } from './StackItem'

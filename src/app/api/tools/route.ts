@@ -10,8 +10,8 @@ export async function GET(request: NextRequest) {
     const rateLimitError = rateLimitMiddleware(request)
     if (rateLimitError) return rateLimitError
     
-    // Apply security headers
-    const securityResponse = securityHeadersMiddleware(request)
+    // Get security headers
+    const securityHeaders = securityHeadersMiddleware(request)
     
     // Authenticate with Clerk
     const authResult = await authMiddleware(request)
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({ success: true, data: tools }, {
       status: 200,
-      headers: securityResponse.headers
+      headers: securityHeaders
     })
   } catch (error: any) {
     logger.error('API', 'GET /api/tools failed', error)
@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
     const rateLimitError = rateLimitMiddleware(request)
     if (rateLimitError) return rateLimitError
     
-    // Apply security headers
-    const securityResponse = securityHeadersMiddleware(request)
+    // Get security headers
+    const securityHeaders = securityHeadersMiddleware(request)
     
     // Authenticate with Clerk
     const authResult = await authMiddleware(request)
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ success: true, data: tool }, {
       status: 201,
-      headers: securityResponse.headers
+      headers: securityHeaders
     })
   } catch (error: any) {
     logger.error('API', 'POST /api/tools failed', error)

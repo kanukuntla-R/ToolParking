@@ -1,8 +1,8 @@
 'use client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { useAppStore } from '@/store'
-import { getCurrentUser } from '@/lib/auth'
 import { logger } from '@/lib/logger'
 import { Agentation } from 'agentation'
 
@@ -12,29 +12,37 @@ const queryClient = new QueryClient({
 
 function AuthBootstrap() {
   const setUser = useAppStore((s) => s.setUser)
-  const ran = useRef(false)
+  const { user: clerkUser, isLoaded } = useUser()
+  const seededRef = useRef(false)
+
   useEffect(() => {
-    if (ran.current) return
-    ran.current = true
-    logger.info('BOOT', 'Auth bootstrap starting...')
-    getCurrentUser().then((user) => {
-      setUser(user)
-      logger.info('BOOT', `User set: ${user?.name ?? 'null'}`)
-      // Seed default tools via API
-      if (user) {
-        fetch('/api/seed', { method: 'POST' })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.success) {
-              logger.info('BOOT', 'Default tools seeded')
-            }
-          })
-          .catch((err) => {
-            logger.error('BOOT', 'Failed to seed default tools', err)
-          })
-      }
-    })
-  }, [setUser])
+    if (!isLoaded || !clerkUser) return
+    
+    const appUser = {
+      $id: clerkUser.id,
+      name: clerkUser.fullName || clerkUser.username || clerkUser.emailAddresses[0]?.emailAddress || 'User',
+      email: clerkUser.emailAddresses[0]?.emailAddress || '',
+    }
+    
+    setUser(appUser)
+    logger.info('BOOT', `User set: ${appUser.name} (${appUser.$id})`)
+
+    // Seed default tools via API (only once)
+    if (!seededRef.current) {
+      seededRef.current = true
+      fetch('/api/seed', { method: 'POST' })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            logger.info('BOOT', 'Default tools seeded')
+          }
+        })
+        .catch((err) => {
+          logger.error('BOOT', 'Failed to seed default tools', err)
+        })
+    }
+  }, [isLoaded, clerkUser, setUser])
+
   return null
 }
 

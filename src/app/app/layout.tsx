@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
+import { useClerk } from '@clerk/nextjs'
 import { useAppStore } from '@/store'
-import { logout } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 import { ParkingSquare, FolderKanban, LogOut, User, Settings, ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher'
@@ -21,6 +21,7 @@ interface EditingProject {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router   = useRouter()
   const pathname = usePathname()
+  const { signOut } = useClerk()
   const { user, setUser, projects, setProjects, addProject, removeProject, activeProject, setActiveProject } = useAppStore()
   const [projectsExpanded, setProjectsExpanded] = useState(true)
   const [showNewProject, setShowNewProject] = useState(false)
@@ -54,9 +55,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [])
 
   async function handleLogout() {
-    await logout()
     setUser(null)
-    router.push('/app/parking')
+    await signOut({ redirectUrl: '/sign-in' })
+    logger.info('AUTH', 'User signed out via Clerk')
   }
 
   async function handleCreateProject(e: React.FormEvent) {

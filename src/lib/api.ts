@@ -33,6 +33,19 @@ class ApiClient {
     logger.debug('API', `${method} ${url}`)
     
     const response = await fetch(url, options)
+    
+    // Handle non-JSON responses (HTML error pages, redirects, etc.)
+    const contentType = response.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) {
+      const text = await response.text().catch(() => '')
+      console.error(`[API] Non-JSON response from ${url}:`, response.status, text.slice(0, 300))
+      throw new Error(
+        response.status === 401 
+          ? 'Session expired. Please sign in again.' 
+          : `Server error (${response.status}). Check console for details.`
+      )
+    }
+    
     const result = await response.json()
     
     if (!response.ok || !result.success) {

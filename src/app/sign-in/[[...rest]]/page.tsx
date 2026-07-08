@@ -34,6 +34,7 @@ export default function SignInPage() {
             },
           }}
           redirectUrl="/app/parking"
+          signUpUrl="/sign-up"
         />
       </div>
     </div>
