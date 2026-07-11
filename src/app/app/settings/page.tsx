@@ -5,6 +5,7 @@ import { User, Palette, Database, Trash2, Check, Info, Pencil } from 'lucide-rea
 import { cn } from '@/lib/utils'
 import { logger } from '@/lib/logger'
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher'
+import { clearAllData as clearAllDataOnServer } from '@/lib/db'
 
 const THEME_ACCENTS = [
   { name: 'Green',  value: '#22c55e' },
@@ -27,6 +28,8 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
   const [profile, setProfile] = useState<ProfileData>({ name: user?.name ?? '', email: user?.email ?? '' })
   const [accentColor, setAccentColor] = useState('#22c55e')
+  const [clearingData, setClearingData] = useState(false)
+  const [clearError, setClearError] = useState<string | null>(null)
 
   useEffect(() => {
     const savedAccent = localStorage.getItem('accent-color')
@@ -76,16 +79,31 @@ export default function SettingsPage() {
     return `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}`
   }
 
-  function handleClearData() {
-    if (!confirm('Clear all your data from the database? This cannot be undone.')) return
-    
-    // Clear UI preferences from localStorage
+  function handleResetPreferences() {
+    if (!confirm('Reset theme and accent color to defaults? This only affects this browser and does not touch your saved tools or projects.')) return
+
     localStorage.removeItem('accent-color')
     localStorage.removeItem('user-profile')
     localStorage.removeItem('theme')
-    
-    logger.warn('SETTINGS', 'UI preferences cleared')
+
+    logger.info('SETTINGS', 'UI preferences reset')
     window.location.reload()
+  }
+
+  async function handleClearAllData() {
+    if (!confirm('Permanently delete all your tools, projects, and stack items from the database? This cannot be undone.')) return
+
+    setClearingData(true)
+    setClearError(null)
+    try {
+      await clearAllDataOnServer()
+      logger.warn('SETTINGS', 'All user data cleared from database')
+      window.location.reload()
+    } catch (err: any) {
+      logger.error('SETTINGS', 'Failed to clear data', err)
+      setClearError(err.message || 'Failed to clear data. Please try again.')
+      setClearingData(false)
+    }
   }
 
   return (
@@ -216,20 +234,38 @@ export default function SettingsPage() {
           {activeTab === 'data' && (
             <div className="space-y-4">
               <div className="glass-card rounded-xl p-5 space-y-4">
-                <h3 className="text-sm font-semibold text-white">Data Storage</h3>
+                <h3 className="text-sm font-semibold text-white">Appearance preferences</h3>
+                <p className="text-xs text-neutral-500">
+                  Resets your theme and accent color on this browser only. Your tools and projects are untouched.
+                </p>
+                <button
+                  onClick={handleResetPreferences}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-neutral-300 text-xs font-medium hover:bg-white/5 transition-all"
+                >
+                  <Trash2 size={13} />
+                  Reset UI preferences
+                </button>
+              </div>
+
+              <div className="glass-card rounded-xl p-5 space-y-4">
+                <h3 className="text-sm font-semibold text-white">Data storage</h3>
                 <p className="text-xs text-neutral-500">
                   Tool Parking uses MongoDB Atlas for secure cloud storage. Your data is encrypted and backed up automatically.
                 </p>
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                  <Info size={14} className="text-amber-400 shrink-0" />
-                  <p className="text-xs text-amber-300">Clearing UI preferences will reset theme and accent color. Your tools and projects are stored in the cloud.</p>
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                  <Info size={14} className="text-red-400 shrink-0" />
+                  <p className="text-xs text-red-300">This permanently deletes your tools, projects, and stack items from the database. Default tools are kept.</p>
                 </div>
+                {clearError && (
+                  <p className="text-xs text-red-400">{clearError}</p>
+                )}
                 <button
-                  onClick={handleClearData}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/20 text-red-400 text-xs font-medium hover:bg-red-500/10 transition-all"
+                  onClick={handleClearAllData}
+                  disabled={clearingData}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/20 text-red-400 text-xs font-medium hover:bg-red-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Trash2 size={13} />
-                  Clear UI preferences
+                  {clearingData ? 'Deleting…' : 'Delete all my data'}
                 </button>
               </div>
 

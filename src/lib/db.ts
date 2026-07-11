@@ -80,3 +80,9 @@ export async function removeFromStack(itemId: string): Promise<void> {
   await apiClient.removeFromStack(itemId)
   logger.info('DB', `removeFromStack: ${itemId}`)
 }
+
+// ─── Data ──────────────────────────────────────────────────────────────────
+export async function clearAllData(): Promise<void> {
+  await apiClient.clearAllData()
+  logger.warn('DB', 'clearAllData: all user data deleted from database')
+}

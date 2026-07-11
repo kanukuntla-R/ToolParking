@@ -126,6 +126,11 @@ class ApiClient {
   async removeFromStack(id: string): Promise<void> {
     await this.request<void>('DELETE', `/stack/${id}`)
   }
+
+  // ─── Data ───────────────────────────────────────────────────────────────
+  async clearAllData(): Promise<void> {
+    await this.request<void>('DELETE', '/data/clear')
+  }
 }
 
 export const apiClient = new ApiClient()

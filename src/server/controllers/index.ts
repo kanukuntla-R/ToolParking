@@ -100,3 +100,9 @@ export class StackController {
     return await DatabaseService.removeFromStack(itemId, userId)
   }
 }
+
+export class DataController {
+  static async clearAll(userId: string): Promise<void> {
+    return await DatabaseService.clearAllData(userId)
+  }
+}
