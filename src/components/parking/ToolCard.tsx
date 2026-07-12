@@ -1,4 +1,5 @@
 'use client'
+import { useQueryClient } from '@tanstack/react-query'
 import { ExternalLink, Trash2, GripVertical, Pencil, Globe } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -16,6 +17,7 @@ interface Props {
 export default function ToolCard({ tool, draggable = true, onEdit }: Props) {
   const removeTool = useAppStore((s) => s.removeTool)
   const user = useAppStore((s) => s.user)
+  const queryClient = useQueryClient()
   const isOwner = user?.$id === tool.userId
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: tool.$id, disabled: !draggable })
@@ -29,7 +31,13 @@ export default function ToolCard({ tool, draggable = true, onEdit }: Props) {
   async function handleDelete(e: React.MouseEvent) {
     e.stopPropagation()
     removeTool(tool.$id)
+    if (user) {
+      queryClient.setQueryData<Tool[]>(['tools', user.$id], (current = []) =>
+        current.filter((existing) => existing.$id !== tool.$id)
+      )
+    }
     try { await deleteTool(tool.$id) } catch {}
+    if (user) queryClient.invalidateQueries({ queryKey: ['tools', user.$id] })
   }
 
   function handleEdit(e: React.MouseEvent) {

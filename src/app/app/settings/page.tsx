@@ -250,7 +250,7 @@ export default function SettingsPage() {
               <div className="glass-card rounded-xl p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-white">Data storage</h3>
                 <p className="text-xs text-neutral-500">
-                  Tool Parking uses MongoDB Atlas for secure cloud storage. Your data is encrypted and backed up automatically.
+                  Tool Parking stores your tools, projects, and stack items in PocketBase.
                 </p>
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
                   <Info size={14} className="text-red-400 shrink-0" />
@@ -278,15 +278,15 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>React</span>
-                    <span className="font-mono text-neutral-400">19.0.0</span>
+                    <span className="font-mono text-neutral-400">19.2.7</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Next.js</span>
-                    <span className="font-mono text-neutral-400">15.5.15</span>
+                    <span className="font-mono text-neutral-400">15.5.20</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Storage</span>
-                    <span className="font-mono text-neutral-400">MongoDB Atlas</span>
+                    <span className="font-mono text-neutral-400">PocketBase</span>
                   </div>
                 </div>
               </div>

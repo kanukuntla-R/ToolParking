@@ -1,5 +1,6 @@
 'use client'
 import { useState, useMemo } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { X, Loader2, ExternalLink, Link, Image, Palette } from 'lucide-react'
 import { createTool, updateTool } from '@/lib/db'
 import { useAppStore } from '@/store'
@@ -28,6 +29,7 @@ interface Props { onClose: () => void; editTool?: Tool }
 
 export default function AddToolModal({ onClose, editTool }: Props) {
   const { user, addTool, updateTool: updateToolInStore } = useAppStore()
+  const queryClient = useQueryClient()
   const isEditing = !!editTool
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
@@ -73,11 +75,19 @@ export default function AddToolModal({ onClose, editTool }: Props) {
       const finalForm = { ...form, icon: resolvedIcon }
       if (isEditing) {
         const updated = await updateTool(editTool.$id, finalForm)
+        queryClient.setQueryData<Tool[]>(['tools', user.$id], (current = []) =>
+          current.map((tool) => tool.$id === updated.$id ? updated : tool)
+        )
         updateToolInStore(updated)
       } else {
         const tool = await createTool(user.$id, finalForm)
+        queryClient.setQueryData<Tool[]>(['tools', user.$id], (current = []) => {
+          if (current.some((existing) => existing.$id === tool.$id)) return current
+          return [tool, ...current]
+        })
         addTool(tool)
       }
+      queryClient.invalidateQueries({ queryKey: ['tools', user.$id] })
       onClose()
     } catch (err: any) {
       setError(err?.message || (isEditing ? 'Failed to update tool' : 'Failed to add tool'))

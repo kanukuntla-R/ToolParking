@@ -9,11 +9,15 @@ export const VALID_LANES = [
   'Frontend', 'Backend', 'Database', 'DevOps', 'Auth', 'Other'
 ] as const
 
-export function validateToolDraft(data: any): { valid: boolean; errors: string[] } {
+export function validateToolDraft(data: any, options: { partial?: boolean } = {}): { valid: boolean; errors: string[] } {
   const errors: string[] = []
   
-  if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {
+  if (!options.partial && (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0)) {
     errors.push('Name is required')
+  }
+
+  if (options.partial && data.name !== undefined && (typeof data.name !== 'string' || data.name.trim().length === 0)) {
+    errors.push('Name cannot be blank')
   }
   
   if (data.name && data.name.length > 100) {
@@ -54,11 +58,15 @@ export function validateToolDraft(data: any): { valid: boolean; errors: string[]
   return { valid: errors.length === 0, errors }
 }
 
-export function validateProjectDraft(data: any): { valid: boolean; errors: string[] } {
+export function validateProjectDraft(data: any, options: { partial?: boolean } = {}): { valid: boolean; errors: string[] } {
   const errors: string[] = []
   
-  if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {
+  if (!options.partial && (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0)) {
     errors.push('Name is required')
+  }
+
+  if (options.partial && data.name !== undefined && (typeof data.name !== 'string' || data.name.trim().length === 0)) {
+    errors.push('Name cannot be blank')
   }
   
   if (data.name && data.name.length > 100) {
@@ -80,15 +88,15 @@ export function validateProjectDraft(data: any): { valid: boolean; errors: strin
   return { valid: errors.length === 0, errors }
 }
 
-export function validateStackItem(data: any): { valid: boolean; errors: string[] } {
+export function validateStackItem(data: any, options: { partial?: boolean } = {}): { valid: boolean; errors: string[] } {
   const errors: string[] = []
   
-  if (!data.projectId) errors.push('Project ID is required')
-  if (!data.toolId) errors.push('Tool ID is required')
-  if (!data.lane || !VALID_LANES.includes(data.lane)) {
+  if (!options.partial && !data.projectId) errors.push('Project ID is required')
+  if (!options.partial && !data.toolId) errors.push('Tool ID is required')
+  if ((!options.partial || data.lane !== undefined) && (!data.lane || !VALID_LANES.includes(data.lane))) {
     errors.push(`Invalid lane. Must be one of: ${VALID_LANES.join(', ')}`)
   }
-  if (typeof data.order !== 'number' || data.order < 0) {
+  if ((!options.partial || data.order !== undefined) && (typeof data.order !== 'number' || data.order < 0)) {
     errors.push('Order must be a non-negative number')
   }
   

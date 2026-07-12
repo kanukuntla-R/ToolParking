@@ -133,14 +133,14 @@ export default function ProjectsPage() {
 
   // Debounced save for notes
   useEffect(() => {
-    if (!activeProject) return
+    if (!activeProject || !currentProject) return
+    if ((currentProject.notes || '') === projectNotes) return
+
     const timer = setTimeout(async () => {
       try {
         await updateProject(activeProject, { notes: projectNotes })
         const { updateProject: updateInStore } = useAppStore.getState()
-        if (currentProject) {
-          updateInStore({ ...currentProject, notes: projectNotes })
-        }
+        updateInStore({ ...currentProject, notes: projectNotes })
       } catch (err) {
         logger.error('PROJECTS', 'Failed to save notes', err)
       }

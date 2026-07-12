@@ -1,65 +1,78 @@
-import type { Tool, ToolDraft, Project, ProjectDraft, StackItem, StackLane } from '@/types'
+import type { Tool, ToolDraft, ToolCategory, Project, ProjectDraft, StackItem, StackLane } from '@/types'
 import { DEFAULT_TOOLS } from '@/lib/seed-data'
 import { logger } from '@/lib/logger'
-import { connectToDatabase } from '@/lib/mongodb'
-import { Tool as ToolModel, Project as ProjectModel, StackItem as StackItemModel } from '@/models'
-
-let seeded = false
+import { getAdminClient } from '@/lib/pocketbase'
 
 export class DatabaseService {
   // ─── Seed Management ─────────────────────────────────────────────────────
   static async seedDefaults(userId: string): Promise<void> {
-    await connectToDatabase()
-    
-    if (seeded) return
-    
-    // Check if user already has tools
-    const existingCount = await ToolModel.countDocuments({ userId })
-    
-    if (existingCount > 0) {
-      logger.info('SEED', `User ${userId} already has ${existingCount} tools, skipping seed`)
-      seeded = true
+    const pb = await getAdminClient()
+
+    const existing = await pb.collection('tools').getList(1, 1, {
+      filter: `userId = "${userId}"`,
+    })
+
+    if (existing.totalItems > 0) {
+      logger.info('SEED', `User ${userId} already has ${existing.totalItems} tools, skipping seed`)
       return
     }
-    
-    // Create default tools for the user
-    const toolsToCreate = DEFAULT_TOOLS.map((tool) => ({
-      ...tool,
-      userId,
-      isDefault: true,
-    }))
-    
-    await ToolModel.insertMany(toolsToCreate)
-    logger.info('SEED', `Seeded ${toolsToCreate.length} default tools for user ${userId}`)
-    seeded = true
+
+    for (const tool of DEFAULT_TOOLS) {
+      await pb.collection('tools').create({
+        name: tool.name,
+        description: tool.description,
+        categories: tool.categories,
+        url: tool.url,
+        icon: tool.icon,
+        color: tool.color,
+        tags: tool.tags,
+        userId,
+        isPublic: tool.isPublic,
+        isDefault: true,
+      })
+    }
+
+    logger.info('SEED', `Seeded ${DEFAULT_TOOLS.length} default tools for user ${userId}`)
   }
 
   // ─── Tools ───────────────────────────────────────────────────────────────
   static async getTools(userId: string): Promise<Tool[]> {
-    await connectToDatabase()
-    
-    const tools = await ToolModel.find({
-      $or: [
-        { userId },
-        { isPublic: true }
-      ]
-    }).sort({ createdAt: -1 })
-    
-    logger.debug('DB', `getTools(${userId}) → ${tools.length} tools`)
-    return tools.map(this.mapTool)
+    try {
+      const pb = await getAdminClient()
+
+      const result = await pb.collection('tools').getList(1, 500, {
+        filter: `userId = "${userId}" || isPublic = true`,
+      })
+
+      logger.debug('DB', `getTools(${userId}) → ${result.items.length} tools`)
+      return result.items.map(this.mapTool)
+    } catch (err: any) {
+      logger.error('DB', 'getTools failed', err)
+      if (err?.status === 404 || err?.message?.includes('not found')) {
+        throw new Error(
+          'PocketBase collection "tools" not found. Create it in the PocketBase admin UI. ' +
+          'See README.md for the required schema.'
+        )
+      }
+      throw err
+    }
   }
 
   static async getToolById(toolId: string): Promise<Tool | null> {
-    await connectToDatabase()
-    
-    const tool = await ToolModel.findById(toolId)
-    return tool ? this.mapTool(tool) : null
+    const pb = await getAdminClient()
+
+    try {
+      const record = await pb.collection('tools').getOne(toolId)
+      return this.mapTool(record)
+    } catch {
+      return null
+    }
   }
 
   static async createTool(userId: string, draft: ToolDraft): Promise<Tool> {
-    await connectToDatabase()
-    
-    const tool = await ToolModel.create({
+    const pb = await getAdminClient()
+
+    const record = await pb.collection('tools').create({
       userId,
       name: draft.name.trim(),
       description: draft.description?.trim() ?? '',
@@ -71,126 +84,131 @@ export class DatabaseService {
       isPublic: draft.isPublic ?? false,
       isDefault: false,
     })
-    
-    logger.info('DB', `createTool: "${tool.name}" (${tool._id})`)
-    return this.mapTool(tool)
+
+    logger.info('DB', `createTool: "${record.name}" (${record.id})`)
+    return this.mapTool(record)
   }
 
   static async updateTool(toolId: string, userId: string, data: Partial<ToolDraft>): Promise<Tool> {
-    await connectToDatabase()
-    
-    const tool = await ToolModel.findOneAndUpdate(
-      { _id: toolId, userId },
-      {
-        ...(data.name && { name: data.name.trim() }),
-        ...(data.description !== undefined && { description: data.description.trim() }),
-        ...(data.categories && { categories: data.categories }),
-        ...(data.url !== undefined && { url: data.url.trim() }),
-        ...(data.icon !== undefined && { icon: data.icon }),
-        ...(data.color && { color: data.color }),
-        ...(data.tags && { tags: data.tags }),
-        ...(data.isPublic !== undefined && { isPublic: data.isPublic }),
-      },
-      { new: true }
-    )
-    
-    if (!tool) throw new Error('Tool not found or unauthorized')
-    
-    logger.info('DB', `updateTool: "${tool.name}" (${toolId})`)
-    return this.mapTool(tool)
+    const pb = await getAdminClient()
+
+    const updateData: Record<string, unknown> = {}
+    if (data.name) updateData.name = data.name.trim()
+    if (data.description !== undefined) updateData.description = data.description.trim()
+    if (data.categories) updateData.categories = data.categories
+    if (data.url !== undefined) updateData.url = data.url.trim()
+    if (data.icon !== undefined) updateData.icon = data.icon
+    if (data.color) updateData.color = data.color
+    if (data.tags) updateData.tags = data.tags
+    if (data.isPublic !== undefined) updateData.isPublic = data.isPublic
+
+    const record = await pb.collection('tools').getOne(toolId)
+    if (record.userId !== userId) throw new Error('Tool not found or unauthorized')
+
+    const updated = await pb.collection('tools').update(toolId, updateData)
+
+    logger.info('DB', `updateTool: "${updated.name}" (${toolId})`)
+    return this.mapTool(updated)
   }
 
   static async deleteTool(toolId: string, userId: string): Promise<void> {
-    await connectToDatabase()
-    
-    const result = await ToolModel.deleteOne({ _id: toolId, userId })
-    
-    if (result.deletedCount === 0) {
-      throw new Error('Tool not found or unauthorized')
-    }
-    
+    const pb = await getAdminClient()
+
+    const record = await pb.collection('tools').getOne(toolId)
+    if (record.userId !== userId) throw new Error('Tool not found or unauthorized')
+
+    await pb.collection('tools').delete(toolId)
     logger.info('DB', `deleteTool: ${toolId}`)
   }
 
   // ─── Projects ────────────────────────────────────────────────────────────
   static async getProjects(userId: string): Promise<Project[]> {
-    await connectToDatabase()
-    
-    const projects = await ProjectModel.find({ userId }).sort({ createdAt: -1 })
-    logger.debug('DB', `getProjects(${userId}) → ${projects.length} projects`)
-    return projects.map(this.mapProject)
+    const pb = await getAdminClient()
+
+    const result = await pb.collection('projects').getList(1, 500, {
+      filter: `userId = "${userId}"`,
+    })
+
+    logger.debug('DB', `getProjects(${userId}) → ${result.items.length} projects`)
+    return result.items.map(this.mapProject)
   }
 
   static async getProjectById(projectId: string, userId: string): Promise<Project | null> {
-    await connectToDatabase()
-    
-    const project = await ProjectModel.findOne({ _id: projectId, userId })
-    return project ? this.mapProject(project) : null
+    const pb = await getAdminClient()
+
+    try {
+      const record = await pb.collection('projects').getOne(projectId)
+      if (record.userId !== userId) return null
+      return this.mapProject(record)
+    } catch {
+      return null
+    }
   }
 
   static async createProject(userId: string, draft: ProjectDraft): Promise<Project> {
-    await connectToDatabase()
-    
-    const project = await ProjectModel.create({
+    const pb = await getAdminClient()
+
+    const record = await pb.collection('projects').create({
       userId,
       name: draft.name.trim(),
       description: draft.description?.trim() ?? '',
       color: draft.color ?? '#22c55e',
       notes: draft.notes ?? '',
     })
-    
-    logger.info('DB', `createProject: "${project.name}" (${project._id})`)
-    return this.mapProject(project)
+
+    logger.info('DB', `createProject: "${record.name}" (${record.id})`)
+    return this.mapProject(record)
   }
 
   static async updateProject(projectId: string, userId: string, data: Partial<ProjectDraft>): Promise<Project> {
-    await connectToDatabase()
-    
-    const project = await ProjectModel.findOneAndUpdate(
-      { _id: projectId, userId },
-      {
-        ...(data.name && { name: data.name.trim() }),
-        ...(data.description !== undefined && { description: data.description.trim() }),
-        ...(data.color && { color: data.color }),
-        ...(data.notes !== undefined && { notes: data.notes }),
-      },
-      { new: true }
-    )
-    
-    if (!project) throw new Error('Project not found or unauthorized')
-    
-    logger.info('DB', `updateProject: "${project.name}" (${projectId})`)
-    return this.mapProject(project)
+    const pb = await getAdminClient()
+
+    const existing = await pb.collection('projects').getOne(projectId)
+    if (existing.userId !== userId) throw new Error('Project not found or unauthorized')
+
+    const updateData: Record<string, unknown> = {}
+    if (data.name) updateData.name = data.name.trim()
+    if (data.description !== undefined) updateData.description = data.description.trim()
+    if (data.color) updateData.color = data.color
+    if (data.notes !== undefined) updateData.notes = data.notes
+
+    const updated = await pb.collection('projects').update(projectId, updateData)
+
+    logger.info('DB', `updateProject: "${updated.name}" (${projectId})`)
+    return this.mapProject(updated)
   }
 
   static async deleteProject(projectId: string, userId: string): Promise<void> {
-    await connectToDatabase()
-    
-    // Delete project
-    const projectResult = await ProjectModel.deleteOne({ _id: projectId, userId })
-    if (projectResult.deletedCount === 0) {
-      throw new Error('Project not found or unauthorized')
+    const pb = await getAdminClient()
+
+    const existing = await pb.collection('projects').getOne(projectId)
+    if (existing.userId !== userId) throw new Error('Project not found or unauthorized')
+
+    const stackItems = await pb.collection('stack_items').getList(1, 500, {
+      filter: `projectId = "${projectId}"`,
+    })
+    for (const item of stackItems.items) {
+      await pb.collection('stack_items').delete(item.id)
     }
-    
-    // Delete associated stack items
-    await StackItemModel.deleteMany({ projectId })
-    
+
+    await pb.collection('projects').delete(projectId)
     logger.info('DB', `deleteProject: ${projectId}`)
   }
 
   // ─── Stack Items ─────────────────────────────────────────────────────────
   static async getStackItems(projectId: string, userId: string): Promise<StackItem[]> {
-    await connectToDatabase()
-    
-    // Verify project ownership
-    const project = await ProjectModel.findOne({ _id: projectId, userId })
-    if (!project) throw new Error('Project not found or unauthorized')
-    
-    const items = await StackItemModel.find({ projectId })
-      .sort({ order: 1 })
-    
-    logger.debug('DB', `getStackItems(${projectId}) → ${items.length} items`)
-    return items.map(this.mapStackItem)
+    const pb = await getAdminClient()
+
+    const project = await pb.collection('projects').getOne(projectId)
+    if (project.userId !== userId) throw new Error('Project not found or unauthorized')
+
+    const result = await pb.collection('stack_items').getList(1, 500, {
+      filter: `projectId = "${projectId}"`,
+      sort: 'order',
+    })
+
+    logger.debug('DB', `getStackItems(${projectId}) → ${result.items.length} items`)
+    return result.items.map(this.mapStackItem)
   }
 
   static async addToStack(
@@ -200,26 +218,26 @@ export class DatabaseService {
     lane: StackLane,
     order: number
   ): Promise<StackItem> {
-    await connectToDatabase()
-    
-    // Verify project ownership
-    const project = await ProjectModel.findOne({ _id: projectId, userId })
-    if (!project) throw new Error('Project not found or unauthorized')
-    
-    // Verify tool exists
-    const tool = await ToolModel.findById(toolId)
-    if (!tool) throw new Error('Tool not found')
-    
-    const item = await StackItemModel.create({
+    const pb = await getAdminClient()
+
+    const project = await pb.collection('projects').getOne(projectId)
+    if (project.userId !== userId) throw new Error('Project not found or unauthorized')
+
+    const tool = await pb.collection('tools').getOne(toolId)
+    if (tool.userId !== userId && tool.isPublic !== true) {
+      throw new Error('Tool not found or unauthorized')
+    }
+
+    const record = await pb.collection('stack_items').create({
       userId,
       projectId,
       toolId,
       lane,
       order,
     })
-    
+
     logger.info('DB', `addToStack: tool=${toolId} → lane=${lane} order=${order}`)
-    return this.mapStackItem(item)
+    return this.mapStackItem(record)
   }
 
   static async updateStackItem(
@@ -227,84 +245,97 @@ export class DatabaseService {
     userId: string,
     data: { lane?: StackLane; order?: number }
   ): Promise<StackItem> {
-    await connectToDatabase()
-    
-    const item = await StackItemModel.findOneAndUpdate(
-      { _id: itemId, userId },
-      {
-        ...(data.lane && { lane: data.lane }),
-        ...(data.order !== undefined && { order: data.order }),
-      },
-      { new: true }
-    )
-    
-    if (!item) throw new Error('Stack item not found or unauthorized')
-    
+    const pb = await getAdminClient()
+
+    const existing = await pb.collection('stack_items').getOne(itemId)
+    if (existing.userId !== userId) throw new Error('Stack item not found or unauthorized')
+
+    const updateData: Record<string, unknown> = {}
+    if (data.lane) updateData.lane = data.lane
+    if (data.order !== undefined) updateData.order = data.order
+
+    const updated = await pb.collection('stack_items').update(itemId, updateData)
+
     logger.info('DB', `updateStackItem: ${itemId}`)
-    return this.mapStackItem(item)
+    return this.mapStackItem(updated)
   }
 
   static async removeFromStack(itemId: string, userId: string): Promise<void> {
-    await connectToDatabase()
-    
-    const result = await StackItemModel.deleteOne({ _id: itemId, userId })
-    
-    if (result.deletedCount === 0) {
-      throw new Error('Stack item not found or unauthorized')
-    }
-    
+    const pb = await getAdminClient()
+
+    const existing = await pb.collection('stack_items').getOne(itemId)
+    if (existing.userId !== userId) throw new Error('Stack item not found or unauthorized')
+
+    await pb.collection('stack_items').delete(itemId)
     logger.info('DB', `removeFromStack: ${itemId}`)
   }
 
   // ─── Bulk Operations ─────────────────────────────────────────────────────
   static async clearAllData(userId: string): Promise<void> {
-    await connectToDatabase()
-    
-    await ToolModel.deleteMany({ userId, isDefault: false })
-    await ProjectModel.deleteMany({ userId })
-    await StackItemModel.deleteMany({ userId })
-    
+    const pb = await getAdminClient()
+
+    const tools = await pb.collection('tools').getList(1, 500, {
+      filter: `userId = "${userId}" && isDefault = false`,
+    })
+    for (const t of tools.items) {
+      await pb.collection('tools').delete(t.id)
+    }
+
+    const projects = await pb.collection('projects').getList(1, 500, {
+      filter: `userId = "${userId}"`,
+    })
+    for (const p of projects.items) {
+      await pb.collection('projects').delete(p.id)
+    }
+
+    const stackItems = await pb.collection('stack_items').getList(1, 500, {
+      filter: `userId = "${userId}"`,
+    })
+    for (const s of stackItems.items) {
+      await pb.collection('stack_items').delete(s.id)
+    }
+
     logger.warn('DB', `Cleared all data for user ${userId}`)
   }
 
   // ─── Helper Methods ──────────────────────────────────────────────────────
-  private static mapTool(tool: any): Tool {
+  private static mapTool(record: Record<string, unknown>): Tool {
     return {
-      $id: tool._id.toString(),
-      $createdAt: tool.createdAt.toISOString(),
-      userId: tool.userId,
-      name: tool.name,
-      description: tool.description,
-      categories: tool.categories,
-      url: tool.url,
-      icon: tool.icon,
-      color: tool.color,
-      tags: tool.tags,
-      isPublic: tool.isPublic,
-      isDefault: tool.isDefault,
+      $id: record.id as string,
+      $createdAt: ((record.created as string | undefined) ?? (record.createdAt as string | undefined) ?? '') as string,
+      userId: record.userId as string,
+      name: record.name as string,
+      description: (record.description as string) ?? '',
+      categories: (record.categories as ToolCategory[]) ?? ['other'],
+      url: (record.url as string) ?? '',
+      icon: (record.icon as string) ?? '',
+      color: (record.color as string) ?? '#22c55e',
+      tags: (record.tags as string[]) ?? [],
+      isPublic: (record.isPublic as boolean) ?? false,
+      isDefault: (record.isDefault as boolean) ?? false,
     }
   }
 
-  private static mapProject(project: any): Project {
+  private static mapProject(record: Record<string, unknown>): Project {
     return {
-      $id: project._id.toString(),
-      $createdAt: project.createdAt.toISOString(),
-      userId: project.userId,
-      name: project.name,
-      description: project.description,
-      color: project.color,
-      notes: project.notes,
+      $id: record.id as string,
+      $createdAt: ((record.created as string | undefined) ?? (record.createdAt as string | undefined) ?? '') as string,
+      userId: record.userId as string,
+      name: record.name as string,
+      description: (record.description as string) ?? '',
+      color: (record.color as string) ?? '#22c55e',
+      notes: (record.notes as string) ?? '',
     }
   }
 
-  private static mapStackItem(item: any): StackItem {
+  private static mapStackItem(record: Record<string, unknown>): StackItem {
     return {
-      $id: item._id.toString(),
-      userId: item.userId,
-      projectId: item.projectId,
-      toolId: item.toolId,
-      lane: item.lane,
-      order: item.order,
+      $id: record.id as string,
+      userId: record.userId as string,
+      projectId: record.projectId as string,
+      toolId: record.toolId as string,
+      lane: record.lane as StackItem['lane'],
+      order: record.order as number,
     }
   }
 }

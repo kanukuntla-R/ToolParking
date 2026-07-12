@@ -62,9 +62,27 @@ export default function MarkdownEditor({ value, onChange, projectName, tools }: 
     URL.revokeObjectURL(url)
   }
 
-  // Simple markdown to HTML for preview
+  function escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+  }
+
+  function safeHref(href: string): string {
+    try {
+      const url = new URL(href, window.location.origin)
+      return ['http:', 'https:', 'mailto:'].includes(url.protocol) ? escapeHtml(href) : '#'
+    } catch {
+      return '#'
+    }
+  }
+
+  // Simple markdown to HTML for preview. Escape first so saved notes cannot inject raw HTML.
   function renderMarkdown(md: string): string {
-    let html = md
+    let html = escapeHtml(md)
       // Code blocks
       .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="md-code-block"><code>$2</code></pre>')
       // Inline code
@@ -80,7 +98,9 @@ export default function MarkdownEditor({ value, onChange, projectName, tools }: 
       // Strikethrough
       .replace(/~~(.+?)~~/g, '<del>$1</del>')
       // Links
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="md-link">$1</a>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, href) => (
+        `<a href="${safeHref(href)}" class="md-link" target="_blank" rel="noopener noreferrer">${label}</a>`
+      ))
       // Blockquotes
       .replace(/^&gt; (.+)$/gm, '<blockquote class="md-quote">$1</blockquote>')
       // Checklists

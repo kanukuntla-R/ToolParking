@@ -3,6 +3,7 @@ import { DatabaseService } from '@/server/services/database'
 import { authMiddleware, securityHeadersMiddleware } from '@/server/middleware'
 import type { NextRequest } from 'next/server'
 import { logger } from '@/lib/logger'
+import { errorResponse } from '@/server/http'
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,9 +23,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: any) {
     logger.error('API', 'POST /api/seed failed', error)
-    return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+    return errorResponse(error)
   }
 }

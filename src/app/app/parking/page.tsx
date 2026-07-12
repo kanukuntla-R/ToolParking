@@ -9,6 +9,7 @@ import { useAppStore } from '@/store'
 import { CATEGORY_LABELS, cn } from '@/lib/utils'
 import ToolCard from '@/components/parking/ToolCard'
 import AddToolModal from '@/components/parking/AddToolModal'
+import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher'
 import type { Tool, ToolCategory } from '@/types'
 
 const FILTERS = [
@@ -68,14 +69,17 @@ export default function ParkingPage() {
           <h1 className="text-base font-semibold text-white">Tool Parking</h1>
           <p className="text-xs text-neutral-600 mt-0.5 font-mono">{tools.length} tools parked</p>
         </div>
-        {/* Desktop add button */}
-        <button
-          onClick={() => setShowModal(true)}
-          className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-black text-xs font-semibold hover:bg-accent-500 transition-all"
-        >
-          <Plus size={14} />
-          Add tool
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeSwitcher compact />
+          {/* Desktop add button */}
+          <button
+            onClick={() => setShowModal(true)}
+            className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-black text-xs font-semibold hover:bg-accent-500 transition-all"
+          >
+            <Plus size={14} />
+            Add tool
+          </button>
+        </div>
       </div>
 
       {/* Search + filter bar */}
