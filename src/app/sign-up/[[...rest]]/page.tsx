@@ -23,7 +23,7 @@ export default function SignUpPage() {
                 rootBox: 'mx-auto flex w-full max-w-md justify-center',
                 card: 'glass mx-auto w-full max-w-md rounded-2xl p-6 glow-green-sm',
                 main: 'w-full',
-                footer: 'w-full',
+                footer: 'w-full bg-surface border-t border-white/[0.06]',
                 headerTitle: 'text-white font-semibold text-base',
                 headerSubtitle: 'text-neutral-400 text-sm',
                 socialButtonsBlockButton: 'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-surface-400 text-sm font-medium text-neutral-300 hover:bg-surface-300 hover:border-accent/30 hover:text-white transition-all mb-3',
@@ -33,7 +33,11 @@ export default function SignUpPage() {
                 formFieldLabel: 'text-neutral-400 text-xs font-medium',
                 formFieldInput: 'w-full px-3 py-2.5 text-sm rounded-xl border border-surface-400 bg-surface-200 text-white placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/40 transition-all',
                 formButtonPrimary: 'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-black text-sm font-semibold hover:bg-accent-500 disabled:opacity-50 transition-all mt-2',
+                footerAction: 'bg-surface text-neutral-500',
+                footerActionText: 'text-neutral-500 text-xs',
                 footerActionLink: 'text-accent font-medium hover:text-accent-500 transition-colors text-xs',
+                footerPages: 'hidden',
+                footerPoweredBy: 'hidden',
               },
             }}
             redirectUrl="/app/parking"
