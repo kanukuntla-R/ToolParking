@@ -7,7 +7,6 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/sign-in(.*)',
   '/sign-up(.*)',
-  '/api/seed',
 ])
 
 // Define API routes

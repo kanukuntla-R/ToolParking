@@ -3,6 +3,7 @@ import { DataController } from '@/server/controllers'
 import { authMiddleware, rateLimitMiddleware, securityHeadersMiddleware } from '@/server/middleware'
 import type { NextRequest } from 'next/server'
 import { logger } from '@/lib/logger'
+import { errorResponse } from '@/server/http'
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -22,9 +23,6 @@ export async function DELETE(request: NextRequest) {
     })
   } catch (error: any) {
     logger.error('API', 'DELETE /api/data/clear failed', error)
-    return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+    return errorResponse(error)
   }
 }

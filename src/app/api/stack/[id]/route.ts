@@ -3,6 +3,7 @@ import { StackController } from '@/server/controllers'
 import { authMiddleware, rateLimitMiddleware, securityHeadersMiddleware } from '@/server/middleware'
 import type { NextRequest } from 'next/server'
 import { logger } from '@/lib/logger'
+import { errorResponse } from '@/server/http'
 
 export async function PUT(
   request: NextRequest,
@@ -14,10 +15,11 @@ export async function PUT(
     if (rateLimitError) return rateLimitError
     
     const securityHeaders = securityHeadersMiddleware(request)
-    const user = await authMiddleware(request)
+    const authResult = await authMiddleware(request)
+    if (authResult instanceof NextResponse) return authResult
     
     const body = await request.json()
-    const stackItem = await StackController.update(params.id, user.userId, body)
+    const stackItem = await StackController.update(params.id, authResult.userId, body)
     
     return NextResponse.json({ success: true, data: stackItem }, {
       status: 200,
@@ -25,10 +27,7 @@ export async function PUT(
     })
   } catch (error: any) {
     logger.error('API', `PUT /api/stack failed`, error)
-    return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+    return errorResponse(error)
   }
 }
 
@@ -42,9 +41,10 @@ export async function DELETE(
     if (rateLimitError) return rateLimitError
     
     const securityHeaders = securityHeadersMiddleware(request)
-    const user = await authMiddleware(request)
+    const authResult = await authMiddleware(request)
+    if (authResult instanceof NextResponse) return authResult
     
-    await StackController.remove(params.id, user.userId)
+    await StackController.remove(params.id, authResult.userId)
     
     return NextResponse.json({ success: true, message: 'Stack item removed' }, {
       status: 200,
@@ -52,9 +52,6 @@ export async function DELETE(
     })
   } catch (error: any) {
     logger.error('API', `DELETE /api/stack failed`, error)
-    return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+    return errorResponse(error)
   }
 }

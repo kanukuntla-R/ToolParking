@@ -3,6 +3,7 @@ import { StackController } from '@/server/controllers'
 import { authMiddleware, rateLimitMiddleware, securityHeadersMiddleware } from '@/server/middleware'
 import type { NextRequest } from 'next/server'
 import { logger } from '@/lib/logger'
+import { errorResponse } from '@/server/http'
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +11,8 @@ export async function GET(request: NextRequest) {
     if (rateLimitError) return rateLimitError
     
     const securityHeaders = securityHeadersMiddleware(request)
-    const user = await authMiddleware(request)
+    const authResult = await authMiddleware(request)
+    if (authResult instanceof NextResponse) return authResult
     
     const { searchParams } = new URL(request.url)
     const projectId = searchParams.get('projectId')
@@ -22,7 +24,7 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    const stackItems = await StackController.list(projectId, user.userId)
+    const stackItems = await StackController.list(projectId, authResult.userId)
     
     return NextResponse.json({ success: true, data: stackItems }, {
       status: 200,
@@ -30,10 +32,7 @@ export async function GET(request: NextRequest) {
     })
   } catch (error: any) {
     logger.error('API', 'GET /api/stack failed', error)
-    return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+    return errorResponse(error)
   }
 }
 
@@ -43,12 +42,13 @@ export async function POST(request: NextRequest) {
     if (rateLimitError) return rateLimitError
     
     const securityHeaders = securityHeadersMiddleware(request)
-    const user = await authMiddleware(request)
+    const authResult = await authMiddleware(request)
+    if (authResult instanceof NextResponse) return authResult
     
     const body = await request.json()
     const { projectId, toolId, lane, order } = body
     
-    const stackItem = await StackController.add(user.userId, projectId, toolId, lane, order)
+    const stackItem = await StackController.add(authResult.userId, projectId, toolId, lane, order)
     
     return NextResponse.json({ success: true, data: stackItem }, {
       status: 201,
@@ -56,9 +56,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: any) {
     logger.error('API', 'POST /api/stack failed', error)
-    return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+    return errorResponse(error)
   }
 }

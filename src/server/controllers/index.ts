@@ -18,7 +18,7 @@ export class ToolController {
   }
 
   static async update(toolId: string, userId: string, data: Partial<ToolDraft>): Promise<Tool> {
-    const validation = validateToolDraft(data)
+    const validation = validateToolDraft(data, { partial: true })
     if (!validation.valid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`)
     }
@@ -50,7 +50,7 @@ export class ProjectController {
   }
 
   static async update(projectId: string, userId: string, data: Partial<ProjectDraft>): Promise<Project> {
-    const validation = validateProjectDraft(data)
+    const validation = validateProjectDraft(data, { partial: true })
     if (!validation.valid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`)
     }
@@ -88,7 +88,7 @@ export class StackController {
     userId: string,
     data: { lane?: StackLane; order?: number }
   ): Promise<StackItem> {
-    const validation = validateStackItem({ ...data })
+    const validation = validateStackItem({ ...data }, { partial: true })
     if (!validation.valid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`)
     }

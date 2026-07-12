@@ -4,7 +4,7 @@ function favicon(domain: string): string {
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
 }
 
-export const DEFAULT_TOOLS: Omit<Tool, '$id' | '$createdAt'>[] = [
+export const DEFAULT_TOOLS: Omit<Tool, '$id' | '$createdAt' | 'userId'>[] = [
   // ─── Languages ─────────────────────────────────────────────────────────────
   { name: 'JavaScript', description: 'The language of the web', categories: ['frontend'], url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript', icon: favicon('developer.mozilla.org'), color: '#f7df1e', tags: ['language', 'web'], isPublic: true },
   { name: 'TypeScript', description: 'JavaScript with syntax for types', categories: ['frontend'], url: 'https://www.typescriptlang.org', icon: favicon('typescriptlang.org'), color: '#3178c6', tags: ['language', 'types'], isPublic: true },

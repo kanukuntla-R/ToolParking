@@ -1,6 +1,4 @@
-import type { ClerkProviderProps } from '@clerk/nextjs'
-
-export const clerkConfig: ClerkProviderProps = {
+export const clerkConfig = {
   appearance: {
     elements: {
       formButtonPrimary: 'bg-accent hover:bg-accent-500 text-black',

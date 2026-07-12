@@ -6,7 +6,6 @@ import { useClerk } from '@clerk/nextjs'
 import { useAppStore } from '@/store'
 import { cn } from '@/lib/utils'
 import { ParkingSquare, FolderKanban, LogOut, User, Settings, ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X } from 'lucide-react'
-import ThemeSwitcher from '@/components/ui/ThemeSwitcher'
 import { createProject, deleteProject, updateProject, getProjects } from '@/lib/db'
 import { logger } from '@/lib/logger'
 
@@ -266,13 +265,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {isSettingsPage && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-accent animate-glow-pulse" />}
           </Link>
 
-          {/* Theme Switcher */}
-          <div className="pt-3 mt-3 border-t border-white/[0.04]">
-            <p className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest px-3 mb-2">Theme</p>
-            <div className="px-3">
-              <ThemeSwitcher compact />
-            </div>
-          </div>
         </nav>
 
         {/* User */}

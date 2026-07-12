@@ -9,7 +9,7 @@ interface Props {
   compact?: boolean
 }
 
-export default function ThemeSwitcher({ compact = false }: Props) {
+export function ThemeSwitcher({ compact = false }: Props) {
   const [theme, setTheme] = useState<Theme>('dark')
 
   useEffect(() => {
@@ -40,20 +40,20 @@ export default function ThemeSwitcher({ compact = false }: Props) {
 
   if (compact) {
     return (
-      <div className="flex items-center gap-1 p-0.5 rounded-lg bg-surface-200 border border-white/[0.04]">
+      <div className="flex items-center gap-1.5 p-1 rounded-xl bg-surface-200 border border-white/[0.04]">
         {options.map(({ value, icon: Icon }) => (
           <button
             key={value}
             onClick={() => setTheme(value)}
             className={cn(
-              'flex-1 flex items-center justify-center py-1.5 rounded-md text-xs transition-all',
+              'flex h-8 w-8 items-center justify-center rounded-lg text-xs transition-all',
               theme === value
                 ? 'bg-surface-300 text-white shadow-sm'
                 : 'text-neutral-500 hover:text-neutral-300'
             )}
             title={value}
           >
-            <Icon size={13} />
+            <Icon size={14} />
           </button>
         ))}
       </div>
@@ -81,3 +81,5 @@ export default function ThemeSwitcher({ compact = false }: Props) {
     </div>
   )
 }
+
+export default ThemeSwitcher
