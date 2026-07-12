@@ -84,5 +84,3 @@ export async function getAdminClient(): Promise<PocketBase> {
 
   return authPromise
 }
-
-export const pb = configureClient(new PocketBase(getPocketBaseUrl()))
