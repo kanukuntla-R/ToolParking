@@ -15,6 +15,14 @@ function getClientError(error: unknown): { message: string; status: number } {
     return { message: 'Not found', status: 404 }
   }
 
+  if (
+    message.includes('POCKETBASE_URL') ||
+    message.includes('PocketBase authentication failed') ||
+    message.toLowerCase().includes('pocketbase')
+  ) {
+    return { message: 'Database unavailable. Check the PocketBase deployment settings.', status: 503 }
+  }
+
   return { message: 'Internal server error', status: 500 }
 }
 

@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { Plus, Search } from 'lucide-react'
+import { Plus, RefreshCw, Search } from 'lucide-react'
 import { getTools } from '@/lib/db'
 import { useAppStore } from '@/store'
 import { CATEGORY_LABELS, cn } from '@/lib/utils'
@@ -23,6 +23,9 @@ const FILTERS = [
   { value: 'auth',       label: 'Auth' },
   { value: 'testing',    label: 'Testing' },
   { value: 'monitoring', label: 'Monitoring' },
+  { value: 'skills',     label: 'Skills' },
+  { value: 'tools',      label: 'Tools' },
+  { value: 'open-source', label: 'Open source' },
   { value: 'other',      label: 'Other' },
 ]
 
@@ -33,7 +36,7 @@ export default function ParkingPage() {
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
 
-  const { data: fetchedTools, isLoading } = useQuery({
+  const { data: fetchedTools, error, isError, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['tools', user?.$id],
     queryFn:  () => getTools(user!.$id),
     enabled:  !!user,
@@ -118,6 +121,24 @@ export default function ParkingPage() {
             {[...Array(6)].map((_, i) => (
               <div key={i} className="h-16 rounded-xl bg-surface-200 animate-pulse border border-white/[0.02]" />
             ))}
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center h-56 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
+              <span className="text-xl text-red-300">!</span>
+            </div>
+            <p className="text-sm font-medium text-neutral-200">Could not load tools</p>
+            <p className="text-xs text-neutral-600 mt-1 max-w-md">
+              {error instanceof Error ? error.message : 'The tools API did not respond. Check the database connection.'}
+            </p>
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="mt-4 flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface-200 border border-surface-400 text-neutral-300 text-xs font-semibold hover:border-accent/30 hover:text-white disabled:opacity-50 transition-all"
+            >
+              <RefreshCw size={13} className={cn(isFetching && 'animate-spin')} />
+              Retry
+            </button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-center">

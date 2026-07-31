@@ -8,6 +8,9 @@ export type ToolCategory =
   | 'ui'
   | 'testing'
   | 'monitoring'
+  | 'skills'
+  | 'tools'
+  | 'open-source'
   | 'other'
 
 export interface Tool {

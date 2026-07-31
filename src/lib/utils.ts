@@ -21,6 +21,9 @@ export const CATEGORY_TO_LANE: Record<ToolCategory, StackLane> = {
   auth:       'Auth',
   testing:    'Other',
   monitoring: 'Other',
+  skills:     'Other',
+  tools:      'Other',
+  'open-source': 'Other',
   other:      'Other',
 }
 
@@ -33,6 +36,9 @@ export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   auth:       'Auth',
   testing:    'Testing',
   monitoring: 'Monitoring',
+  skills:     'Skills',
+  tools:      'Tools',
+  'open-source': 'Open source',
   other:      'Other',
 }
 
@@ -45,6 +51,9 @@ export const CATEGORY_COLORS: Record<ToolCategory, { bg: string; text: string }>
   auth:       { bg: 'bg-pink-500/10',   text: 'text-pink-400' },
   testing:    { bg: 'bg-cyan-500/10',   text: 'text-cyan-400' },
   monitoring: { bg: 'bg-red-500/10',    text: 'text-red-400' },
+  skills:     { bg: 'bg-violet-500/10', text: 'text-violet-400' },
+  tools:      { bg: 'bg-lime-500/10',   text: 'text-lime-400' },
+  'open-source': { bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
   other:      { bg: 'bg-neutral-500/10', text: 'text-neutral-400' },
 }
 

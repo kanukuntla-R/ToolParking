@@ -5,7 +5,7 @@ import { useDraggable } from '@dnd-kit/core'
 import type { Tool, ToolCategory } from '@/types'
 import { CATEGORY_LABELS, cn } from '@/lib/utils'
 
-const CATEGORIES: ToolCategory[] = ['frontend', 'backend', 'database', 'devops', 'auth', 'ui', 'testing', 'monitoring', 'other']
+const CATEGORIES: ToolCategory[] = ['frontend', 'backend', 'database', 'devops', 'auth', 'ui', 'testing', 'monitoring', 'skills', 'tools', 'open-source', 'other']
 
 interface DraggableToolProps {
   tool: Tool

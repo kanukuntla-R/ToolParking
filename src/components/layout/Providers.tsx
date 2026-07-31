@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useAppStore } from '@/store'
 import { logger } from '@/lib/logger'
-import { Agentation } from 'agentation'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
@@ -51,7 +50,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <AuthBootstrap />
       {children}
-      <Agentation />
     </QueryClientProvider>
   )
 }
