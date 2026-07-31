@@ -2,7 +2,7 @@ import type { ToolCategory } from '@/types'
 
 export const VALID_CATEGORIES: ToolCategory[] = [
   'frontend', 'backend', 'database', 'devops', 
-  'auth', 'ui', 'testing', 'monitoring', 'other'
+  'auth', 'ui', 'testing', 'monitoring', 'skills', 'tools', 'open-source', 'other'
 ]
 
 export const VALID_LANES = [

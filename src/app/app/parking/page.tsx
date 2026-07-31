@@ -23,6 +23,9 @@ const FILTERS = [
   { value: 'auth',       label: 'Auth' },
   { value: 'testing',    label: 'Testing' },
   { value: 'monitoring', label: 'Monitoring' },
+  { value: 'skills',     label: 'Skills' },
+  { value: 'tools',      label: 'Tools' },
+  { value: 'open-source', label: 'Open source' },
   { value: 'other',      label: 'Other' },
 ]
 
