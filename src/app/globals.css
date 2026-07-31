@@ -24,11 +24,11 @@
     --text-faint: 82 82 82;
 
     --border-subtle: rgba(255, 255, 255, 0.04);
-    --border-accent: rgba(34, 197, 94, 0.08);
-    --border-accent-hover: rgba(34, 197, 94, 0.12);
+    --border-accent: rgb(var(--accent) / 0.08);
+    --border-accent-hover: rgb(var(--accent) / 0.12);
 
     --scrollbar-thumb: #2a2a2a;
-    --scrollbar-thumb-hover: #22c55e40;
+    --scrollbar-thumb-hover: rgb(var(--accent) / 0.25);
   }
 
   /* Light theme */
@@ -49,11 +49,11 @@
     --text-faint: 180 180 180;
 
     --border-subtle: rgba(0, 0, 0, 0.06);
-    --border-accent: rgba(34, 197, 94, 0.15);
-    --border-accent-hover: rgba(34, 197, 94, 0.25);
+    --border-accent: rgb(var(--accent) / 0.15);
+    --border-accent-hover: rgb(var(--accent) / 0.25);
 
     --scrollbar-thumb: #d4d4d4;
-    --scrollbar-thumb-hover: #22c55e60;
+    --scrollbar-thumb-hover: rgb(var(--accent) / 0.38);
   }
 
   /* Light theme text color overrides */
@@ -78,7 +78,7 @@
 
   /* Modal light theme fixes */
   html.light .glow-green-sm {
-    box-shadow: 0 0 10px rgba(34, 197, 94, 0.15);
+    box-shadow: 0 0 10px rgb(var(--accent) / 0.15);
   }
   html.light .hover\:bg-surface-300:hover { background-color: rgb(var(--bg-surface-300)); }
   html.light .hover\:bg-surface-400:hover { background-color: rgb(var(--bg-surface-400)); }
@@ -99,7 +99,7 @@
   }
 
   ::selection {
-    background: rgba(34, 197, 94, 0.25);
+    background: rgb(var(--accent) / 0.25);
     color: #f0fdf4;
   }
 }
@@ -133,16 +133,16 @@
 
   /* Glow effects */
   .glow-green {
-    box-shadow: 0 0 20px rgba(34, 197, 94, 0.15), 0 0 60px rgba(34, 197, 94, 0.05);
+    box-shadow: 0 0 20px rgb(var(--accent) / 0.15), 0 0 60px rgb(var(--accent) / 0.05);
   }
 
   .glow-green-sm {
-    box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
+    box-shadow: 0 0 10px rgb(var(--accent) / 0.1);
   }
 
   .glow-border {
-    border-color: rgba(34, 197, 94, 0.2);
-    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.05), inset 0 0 0 1px rgba(34, 197, 94, 0.03);
+    border-color: rgb(var(--accent) / 0.2);
+    box-shadow: 0 0 0 1px rgb(var(--accent) / 0.05), inset 0 0 0 1px rgb(var(--accent) / 0.03);
   }
 
   /* Clerk auth footer */

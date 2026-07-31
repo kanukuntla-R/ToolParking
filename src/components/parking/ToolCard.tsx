@@ -1,8 +1,6 @@
 'use client'
 import { useQueryClient } from '@tanstack/react-query'
-import { ExternalLink, Trash2, GripVertical, Pencil, Globe } from 'lucide-react'
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { ExternalLink, Trash2, Pencil, Globe } from 'lucide-react'
 import type { Tool } from '@/types'
 import { CATEGORY_LABELS, CATEGORY_COLORS, cn } from '@/lib/utils'
 import { deleteTool } from '@/lib/db'
@@ -10,33 +8,28 @@ import { useAppStore } from '@/store'
 
 interface Props {
   tool: Tool
-  draggable?: boolean
   onEdit?: (tool: Tool) => void
 }
 
-export default function ToolCard({ tool, draggable = true, onEdit }: Props) {
+export default function ToolCard({ tool, onEdit }: Props) {
   const removeTool = useAppStore((s) => s.removeTool)
   const user = useAppStore((s) => s.user)
   const queryClient = useQueryClient()
   const isOwner = user?.$id === tool.userId
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: tool.$id, disabled: !draggable })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.4 : 1,
-  }
-
   async function handleDelete(e: React.MouseEvent) {
     e.stopPropagation()
-    removeTool(tool.$id)
-    if (user) {
-      queryClient.setQueryData<Tool[]>(['tools', user.$id], (current = []) =>
-        current.filter((existing) => existing.$id !== tool.$id)
-      )
+    if (!confirm(`Delete "${tool.name}"?`)) return
+    try {
+      await deleteTool(tool.$id)
+      removeTool(tool.$id)
+      if (user) {
+        queryClient.setQueryData<Tool[]>(['tools', user.$id], (current = []) =>
+          current.filter((existing) => existing.$id !== tool.$id)
+        )
+      }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to delete tool')
     }
-    try { await deleteTool(tool.$id) } catch {}
     if (user) queryClient.invalidateQueries({ queryKey: ['tools', user.$id] })
   }
 
@@ -46,18 +39,8 @@ export default function ToolCard({ tool, draggable = true, onEdit }: Props) {
   }
 
   return (
-    <div
-      ref={setNodeRef} style={style}
-      className={cn(
-        'group glass-card flex gap-3 px-3 py-3 rounded-xl transition-all duration-200 cursor-grab active:cursor-grabbing',
-        isDragging && 'glow-green'
-      )}
-    >
-      {/* Left column: drag handle + icon */}
-      <div className="flex flex-col items-center gap-1 shrink-0">
-        <div {...attributes} {...listeners} className="hidden md:block text-neutral-700 hover:text-accent transition-colors">
-          <GripVertical size={14} />
-        </div>
+    <div className="group glass-card flex gap-3 px-3 py-3 rounded-xl transition-all duration-200">
+      <div className="shrink-0">
         <div
           className="w-9 h-9 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-sm font-medium overflow-hidden"
           style={{ backgroundColor: tool.color + '20', color: tool.color }}

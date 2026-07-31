@@ -163,7 +163,7 @@ export default function CategoryToolPanel({ tools, onSelect }: Props) {
             </div>
           )
         })}
-        {filtered.size === 0 && (
+        {activeCategories.length === 0 && (
           <div className="px-3 py-8 text-center text-xs text-neutral-600">No tools found</div>
         )}
       </div>

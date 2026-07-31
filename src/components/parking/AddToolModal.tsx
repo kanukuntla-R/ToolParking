@@ -1,7 +1,7 @@
 'use client'
 import { useState, useMemo } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { X, Loader2, ExternalLink, Link, Image, Palette } from 'lucide-react'
+import { X, Loader2, ExternalLink, Link, Image as ImageIcon, Palette } from 'lucide-react'
 import { createTool, updateTool } from '@/lib/db'
 import { useAppStore } from '@/store'
 import { CATEGORY_LABELS, cn } from '@/lib/utils'
@@ -41,17 +41,20 @@ export default function AddToolModal({ onClose, editTool }: Props) {
     url:         editTool?.url ?? '',
     icon:        editTool?.icon ?? '',
     color:       editTool?.color ?? '#22c55e',
-    tags:        editTool?.tags ? (Array.isArray(editTool.tags) ? editTool.tags : JSON.parse(editTool.tags as unknown as string)) : [],
+    tags:        Array.isArray(editTool?.tags) ? editTool.tags : [],
     isPublic:    editTool?.isPublic ?? false,
   })
   const [tagInput, setTagInput] = useState('')
-  const [iconSource, setIconSource] = useState<IconSource>('google')
+  const [iconSource, setIconSource] = useState<IconSource>(editTool?.icon ? 'custom' : 'google')
   const [customIconUrl, setCustomIconUrl] = useState(editTool?.icon?.startsWith('http') ? editTool.icon : '')
 
   const resolvedIcon = useMemo(() => {
     if (iconSource === 'custom') return customIconUrl
     return getFaviconUrl(form.url, iconSource)
   }, [form.url, iconSource, customIconUrl])
+  const hostname = useMemo(() => {
+    try { return new URL(form.url).hostname } catch { return '' }
+  }, [form.url])
 
   function set<K extends keyof ToolDraft>(k: K, v: ToolDraft[K]) {
     setForm((f) => ({ ...f, [k]: v }))
@@ -148,7 +151,7 @@ export default function AddToolModal({ onClose, editTool }: Props) {
               {[
                 { id: 'google' as const, label: 'Google', icon: <Link size={11} /> },
                 { id: 'duckduckgo' as const, label: 'DDG', icon: <Link size={11} /> },
-                { id: 'clearbit' as const, label: 'Clearbit', icon: <Image size={11} /> },
+                { id: 'clearbit' as const, label: 'Clearbit', icon: <ImageIcon size={11} /> },
                 { id: 'custom' as const, label: 'Custom', icon: <Palette size={11} /> },
               ].map((s) => (
                 <button
@@ -176,9 +179,9 @@ export default function AddToolModal({ onClose, editTool }: Props) {
               />
             )}
 
-            {iconSource !== 'custom' && form.url && (
+            {iconSource !== 'custom' && hostname && (
               <p className="text-[10px] text-neutral-500">
-                Auto-fetched from <span className="text-neutral-400">{new URL(form.url).hostname}</span>
+                Auto-fetched from <span className="text-neutral-400">{hostname}</span>
               </p>
             )}
           </div>

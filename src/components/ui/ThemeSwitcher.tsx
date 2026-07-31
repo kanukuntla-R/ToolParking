@@ -19,17 +19,18 @@ export function ThemeSwitcher({ compact = false }: Props) {
 
   useEffect(() => {
     const root = document.documentElement
-    root.classList.remove('light', 'dark')
-
-    if (theme === 'system') {
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      if (!isDark) root.classList.add('light')
-    } else if (theme === 'light') {
-      root.classList.add('light')
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const applyTheme = () => {
+      root.classList.remove('light', 'dark')
+      if (theme === 'light' || (theme === 'system' && !media.matches)) root.classList.add('light')
     }
-    // 'dark' = no class added (default dark theme)
 
+    applyTheme()
     localStorage.setItem('theme', theme)
+
+    if (theme !== 'system') return
+    media.addEventListener('change', applyTheme)
+    return () => media.removeEventListener('change', applyTheme)
   }, [theme])
 
   const options: { value: Theme; icon: typeof Sun; label: string }[] = [

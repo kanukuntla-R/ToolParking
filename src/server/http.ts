@@ -3,6 +3,10 @@ import { NextResponse } from 'next/server'
 function getClientError(error: unknown): { message: string; status: number } {
   const message = error instanceof Error ? error.message : ''
 
+  if (error instanceof SyntaxError) {
+    return { message: 'Invalid JSON body', status: 400 }
+  }
+
   if (message.startsWith('Validation failed:')) {
     return { message, status: 400 }
   }

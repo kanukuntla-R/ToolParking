@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { GeistMono } from 'geist/font/mono'
 import { ClerkProvider } from '@clerk/nextjs'
+import { Agentation } from 'agentation'
 import './globals.css'
 import { Providers } from '@/components/layout/Providers'
 import { clerkConfig } from '@/lib/clerk-config'
@@ -10,6 +11,19 @@ const geistMono = GeistMono
 export const metadata: Metadata = {
   title: 'Tool Parking',
   description: 'Your personal library of dev tools, services, and open-source projects',
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'Tool Parking',
+    statusBarStyle: 'black-translucent',
+  },
 }
 
 export const viewport: Viewport = {
@@ -58,6 +72,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </head>
         <body className={`${geistMono.variable} font-sans antialiased bg-surface text-neutral-200 min-h-screen`}>
           <Providers>{children}</Providers>
+          {process.env.NODE_ENV === 'development' && <Agentation />}
         </body>
       </html>
     </ClerkProvider>

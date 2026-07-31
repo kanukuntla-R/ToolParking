@@ -1,8 +1,6 @@
 'use client'
 import { useEffect, useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus, RefreshCw, Search } from 'lucide-react'
 import { getTools } from '@/lib/db'
 import { useAppStore } from '@/store'
@@ -34,8 +32,6 @@ export default function ParkingPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingTool, setEditingTool] = useState<Tool | null>(null)
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
-
   const { data: fetchedTools, error, isError, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['tools', user?.$id],
     queryFn:  () => getTools(user!.$id),
@@ -44,7 +40,7 @@ export default function ParkingPage() {
 
   useEffect(() => {
     if (fetchedTools) setTools(fetchedTools)
-  }, [fetchedTools])
+  }, [fetchedTools, setTools])
 
   const filtered = useMemo(() => {
     return tools.filter((t) => {
@@ -59,10 +55,6 @@ export default function ParkingPage() {
       return matchCat && matchSearch
     })
   }, [tools, activeFilter, searchQuery])
-
-  function handleDragEnd(event: DragEndEvent) {
-    // Local reorder only
-  }
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -162,16 +154,11 @@ export default function ParkingPage() {
             )}
           </div>
         ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={filtered.map((t) => t.$id)} strategy={verticalListSortingStrategy}>
-              {/* Mobile: compact list | Desktop: responsive grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3">
-                {filtered.map((tool) => (
-                  <ToolCard key={tool.$id} tool={tool} onEdit={(t) => setEditingTool(t)} />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3">
+            {filtered.map((tool) => (
+              <ToolCard key={tool.$id} tool={tool} onEdit={(t) => setEditingTool(t)} />
+            ))}
+          </div>
         )}
       </div>
 
