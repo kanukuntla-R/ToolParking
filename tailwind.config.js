@@ -23,13 +23,13 @@ module.exports = {
           900: '#999999',
         },
         accent: {
-          DEFAULT: '#22c55e',
+          DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
           50:  '#052e16',
           100: '#064e27',
           200: '#0a6e35',
           300: '#16a34a',
           400: '#22c55e',
-          500: '#4ade80',
+          500: 'rgb(var(--accent) / 0.8)',
           600: '#86efac',
           700: '#bbf7d0',
           800: '#dcfce7',
@@ -71,8 +71,8 @@ module.exports = {
         },
       },
       backgroundImage: {
-        'grid-pattern': 'linear-gradient(rgba(34,197,94,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,0.03) 1px, transparent 1px)',
-        'glow-radial':  'radial-gradient(circle at center, rgba(34,197,94,0.08) 0%, transparent 70%)',
+        'grid-pattern': 'linear-gradient(rgb(var(--accent) / 0.03) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--accent) / 0.03) 1px, transparent 1px)',
+        'glow-radial':  'radial-gradient(circle at center, rgb(var(--accent) / 0.08) 0%, transparent 70%)',
       },
       backgroundSize: {
         'grid': '24px 24px',

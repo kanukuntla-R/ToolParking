@@ -52,7 +52,7 @@ export default function SettingsPage() {
         setProfile({ name: user.name, email: user.email })
       }
     }
-  }, [user?.$id])
+  }, [user, setUser])
 
   const tabs = [
     { id: 'profile' as const, label: 'Profile', icon: User },
@@ -71,6 +71,11 @@ export default function SettingsPage() {
     document.documentElement.style.setProperty('--accent', hexToRgb(accentColor))
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  function handleAccentChange(color: string) {
+    setAccentColor(color)
+    document.documentElement.style.setProperty('--accent', hexToRgb(color))
   }
 
   function hexToRgb(hex: string): string {
@@ -198,7 +203,7 @@ export default function SettingsPage() {
                   {THEME_ACCENTS.map((c) => (
                     <button
                       key={c.value}
-                      onClick={() => setAccentColor(c.value)}
+                      onClick={() => handleAccentChange(c.value)}
                       className={cn(
                         'w-10 h-10 rounded-xl transition-all border-2 hover:scale-110',
                         accentColor === c.value ? 'border-white/30 scale-110' : 'border-transparent'
@@ -212,7 +217,7 @@ export default function SettingsPage() {
                   <input
                     type="color"
                     value={accentColor}
-                    onChange={(e) => setAccentColor(e.target.value)}
+                    onChange={(e) => handleAccentChange(e.target.value)}
                     className="w-8 h-8 rounded cursor-pointer border border-surface-400 bg-surface-200"
                   />
                   <span className="text-xs font-mono text-neutral-500">{accentColor}</span>

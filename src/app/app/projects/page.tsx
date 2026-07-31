@@ -6,6 +6,7 @@ import {
   PointerSensor, useSensor, useSensors,
   closestCorners, DragOverlay,
 } from '@dnd-kit/core'
+import { arrayMove } from '@dnd-kit/sortable'
 import { Plus, ChevronDown, Trash2, Layers, ParkingSquare, FileText } from 'lucide-react'
 import { getProjects, getTools, getStackItems, addToStack, deleteProject, updateStackItem, updateProject } from '@/lib/db'
 import { useAppStore } from '@/store'
@@ -16,8 +17,6 @@ import CategoryToolPanel from '@/components/ui/CategoryToolPanel'
 import MarkdownEditor from '@/components/projects/MarkdownEditor'
 import { logger } from '@/lib/logger'
 import type { StackItem, StackLane as SLane, Tool } from '@/types'
-import { GripVertical } from 'lucide-react'
-import { useDraggable } from '@dnd-kit/core'
 
 function DragOverlayCard({ tool }: { tool: Tool }) {
   return (
@@ -35,34 +34,6 @@ function DragOverlayCard({ tool }: { tool: Tool }) {
         <p className="text-sm font-semibold text-white">{tool.name}</p>
         <p className="text-xs text-neutral-500 truncate">{tool.description}</p>
       </div>
-    </div>
-  )
-}
-
-function ParkingToolCard({ tool }: { tool: Tool }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: tool.$id })
-
-  return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      className={cn(
-        'glass-card flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-grab active:cursor-grabbing transition-all duration-150',
-        isDragging && 'opacity-60 glow-green-sm'
-      )}
-    >
-      <GripVertical size={14} className="text-neutral-700 pointer-events-none shrink-0 hidden md:block" />
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 pointer-events-none font-medium overflow-hidden"
-        style={{ backgroundColor: tool.color + '20', color: tool.color }}>
-        {tool.icon?.startsWith('http') ? (
-          <img src={tool.icon} alt="" className="w-5 h-5 object-contain"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-        ) : (
-          tool.icon || tool.name[0]?.toUpperCase()
-        )}
-      </div>
-      <span className="text-sm font-medium text-neutral-300 flex-1 truncate pointer-events-none">{tool.name}</span>
     </div>
   )
 }
@@ -94,7 +65,7 @@ export default function ProjectsPage() {
       setProjects(fetchedProjects)
       if (!activeProject && fetchedProjects.length > 0) setActiveProject(fetchedProjects[0].$id)
     }
-  }, [fetchedProjects])
+  }, [fetchedProjects, activeProject, setProjects, setActiveProject])
 
   const { data: fetchedTools } = useQuery({
     queryKey: ['tools', user?.$id],
@@ -104,11 +75,11 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     if (fetchedTools) setTools(fetchedTools)
-  }, [fetchedTools])
+  }, [fetchedTools, setTools])
 
   useEffect(() => {
     setStackItems([])
-  }, [activeProject])
+  }, [activeProject, setStackItems])
 
   const { data: fetchedStack } = useQuery({
     queryKey: ['stack', activeProject],
@@ -118,7 +89,7 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     if (fetchedStack) setStackItems(fetchedStack)
-  }, [fetchedStack])
+  }, [fetchedStack, setStackItems])
 
   const currentProject = projects.find((p) => p.$id === activeProject)
 
@@ -194,6 +165,7 @@ export default function ProjectsPage() {
     const existingItem = stackItems.find((i) => i.$id === activeId)
 
     if (!isTool && !existingItem) return
+    if (isTool && stackItems.some((item) => item.toolId === activeId)) return
 
     const lane = resolveLane(overId)
     if (!lane) return
@@ -218,15 +190,31 @@ export default function ProjectsPage() {
       } catch {
         useAppStore.getState().removeStackItem(tempItem.$id)
       }
-    } else if (existingItem && existingItem.lane !== lane) {
-      const order = laneMap[lane]?.length ?? 0
-      useAppStore.getState().removeStackItem(activeId)
-      addStackItem({ ...existingItem, lane, order })
-      try {
-        await updateStackItem(activeId, { lane, order })
-      } catch {
+    } else if (existingItem) {
+      if (existingItem.lane !== lane) {
+        const order = laneMap[lane]?.length ?? 0
         useAppStore.getState().removeStackItem(activeId)
-        addStackItem(existingItem)
+        addStackItem({ ...existingItem, lane, order })
+        try {
+          await updateStackItem(activeId, { lane, order })
+        } catch {
+          useAppStore.getState().removeStackItem(activeId)
+          addStackItem(existingItem)
+        }
+        return
+      }
+
+      const laneItems = laneMap[lane]
+      const from = laneItems.findIndex((item) => item.$id === activeId)
+      const to = laneItems.findIndex((item) => item.$id === overId)
+      if (from < 0 || to < 0 || from === to) return
+
+      const reordered = arrayMove(laneItems, from, to).map((item, order) => ({ ...item, order }))
+      setStackItems(stackItems.map((item) => reordered.find((next) => next.$id === item.$id) ?? item))
+      try {
+        await Promise.all(reordered.map((item) => updateStackItem(item.$id, { order: item.order })))
+      } catch {
+        setStackItems(stackItems)
       }
     }
   }
@@ -234,6 +222,7 @@ export default function ProjectsPage() {
   // Mobile: add tool to stack by tapping (auto-assigns lane by category)
   async function handleMobileAddToStack(tool: Tool) {
     if (!activeProject || !user) return
+    if (stackItems.some((item) => item.toolId === tool.$id)) return
     const lane = getCategoryLane(tool.categories) || 'Other'
     const order = laneMap[lane]?.length ?? 0
     const tempItem: StackItem = {
@@ -259,10 +248,14 @@ export default function ProjectsPage() {
 
   async function handleDeleteProject() {
     if (!activeProject || !confirm('Delete this project?')) return
-    const prev = projects.find((p) => p.$id !== activeProject)
-    useAppStore.getState().removeProject(activeProject)
-    setActiveProject(prev?.$id || null)
-    try { await deleteProject(activeProject) } catch {}
+    const projectId = activeProject
+    try {
+      await deleteProject(projectId)
+      useAppStore.getState().removeProject(projectId)
+      setActiveProject(projects.find((p) => p.$id !== projectId)?.$id || null)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to delete project')
+    }
   }
 
   return (
@@ -284,15 +277,17 @@ export default function ProjectsPage() {
               <div className="relative flex-1">
                 <button
                   onClick={() => setShowProjectMenu(!showProjectMenu)}
+                  aria-expanded={showProjectMenu}
                   className="flex items-center gap-1.5 text-sm font-semibold text-white"
                 >
                   <span className="truncate">{currentProject?.name || 'Select project'}</span>
                   <ChevronDown size={14} className="text-neutral-500 shrink-0" />
                 </button>
                 {showProjectMenu && (
-                  <div className="absolute top-full left-0 mt-2 w-56 glass rounded-xl border border-white/[0.06] shadow-2xl z-30 overflow-hidden">
+                  <div role="menu" className="absolute top-full left-0 mt-2 w-56 bg-surface-100 rounded-xl border border-white/[0.06] shadow-2xl z-50 overflow-hidden">
                     {projects.map((p) => (
                       <button key={p.$id}
+                        role="menuitem"
                         onClick={() => { setActiveProject(p.$id); setShowProjectMenu(false) }}
                         className={cn(
                           'w-full flex items-center gap-3 px-4 py-3 text-sm text-left hover:bg-surface-300 transition-colors',
@@ -304,6 +299,7 @@ export default function ProjectsPage() {
                     ))}
                     <div className="border-t border-white/[0.04]">
                       <button onClick={() => { setShowProjectMenu(false); setShowCreateModal(true) }}
+                        role="menuitem"
                         className="w-full flex items-center gap-3 px-4 py-3 text-sm text-accent hover:bg-surface-300 transition-colors">
                         <Plus size={14} />
                         New project
@@ -386,15 +382,17 @@ export default function ProjectsPage() {
               <div className="relative">
                 <button
                   onClick={() => setShowProjectMenu(!showProjectMenu)}
+                  aria-expanded={showProjectMenu}
                   className="flex items-center gap-2 text-lg font-bold text-white hover:text-accent transition-colors"
                 >
                   {currentProject?.name || 'Select project'}
                   <ChevronDown size={16} className="text-neutral-500" />
                 </button>
                 {showProjectMenu && (
-                  <div className="absolute top-full left-0 mt-2 w-56 glass rounded-xl border border-white/[0.06] shadow-2xl z-20 overflow-hidden">
+                  <div role="menu" className="absolute top-full left-0 mt-2 w-56 bg-surface-100 rounded-xl border border-white/[0.06] shadow-2xl z-50 overflow-hidden">
                     {projects.map((p) => (
                       <button key={p.$id}
+                        role="menuitem"
                         onClick={() => { setActiveProject(p.$id); setShowProjectMenu(false) }}
                         className={cn(
                           'w-full flex items-center gap-3 px-4 py-3 text-sm text-left hover:bg-surface-300 transition-colors',
@@ -406,6 +404,7 @@ export default function ProjectsPage() {
                     ))}
                     <div className="border-t border-white/[0.04]">
                       <button onClick={() => { setShowProjectMenu(false); setShowCreateModal(true) }}
+                        role="menuitem"
                         className="w-full flex items-center gap-3 px-4 py-3 text-sm text-accent hover:bg-surface-300 transition-colors">
                         <Plus size={14} />
                         New project
@@ -476,7 +475,7 @@ export default function ProjectsPage() {
 
               {/* Notes Panel — always visible */}
               {currentProject && (
-                <div className="mt-6 glass-card rounded-2xl border border-white/[0.04] overflow-hidden" style={{ height: '400px' }}>
+                <div className="mt-6 h-[calc(100dvh-8rem)] min-h-[400px] glass-card rounded-2xl border border-white/[0.04] overflow-hidden">
                   <MarkdownEditor
                     value={projectNotes}
                     onChange={setProjectNotes}

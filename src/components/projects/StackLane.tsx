@@ -32,8 +32,12 @@ function PlacedToolCard({ item }: { item: StackItem }) {
 
   async function handleRemove(e: React.MouseEvent) {
     e.stopPropagation()
-    removeStackItem(item.$id)
-    try { await removeFromStack(item.$id) } catch {}
+    try {
+      await removeFromStack(item.$id)
+      removeStackItem(item.$id)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to remove tool from stack')
+    }
   }
 
   const tool = item.tool
@@ -64,6 +68,7 @@ function PlacedToolCard({ item }: { item: StackItem }) {
         </a>
       )}
       <button
+        aria-label={`Remove ${tool.name} from stack`}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={handleRemove}
         className="opacity-0 group-hover:opacity-100 text-neutral-700 hover:text-red-400 transition-all shrink-0 p-1.5 hover:bg-red-500/10 rounded-lg">

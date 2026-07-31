@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useClerk } from '@clerk/nextjs'
 import { useAppStore } from '@/store'
 import { cn } from '@/lib/utils'
-import { ParkingSquare, FolderKanban, LogOut, User, Settings, ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X } from 'lucide-react'
+import { ParkingSquare, FolderKanban, LogOut, User, Settings, ChevronDown, ChevronRight, Plus, Trash2, Pencil, Check, X, Timer, Play, Pause, RotateCcw } from 'lucide-react'
 import { createProject, deleteProject, updateProject, getProjects } from '@/lib/db'
 import { logger } from '@/lib/logger'
 
@@ -15,6 +15,60 @@ interface EditingProject {
   id: string
   name: string
   color: string
+}
+
+function SidebarTimer() {
+  const [elapsed, setElapsed] = useState(0)
+  const [startedAt, setStartedAt] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (startedAt === null) return
+    const tick = () => setElapsed(Date.now() - startedAt)
+    tick()
+    const interval = window.setInterval(tick, 250)
+    return () => window.clearInterval(interval)
+  }, [startedAt])
+
+  const seconds = Math.floor(elapsed / 1000)
+  const display = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
+  const running = startedAt !== null
+
+  function toggle() {
+    if (startedAt !== null) {
+      setElapsed(Date.now() - startedAt)
+      setStartedAt(null)
+    } else {
+      setStartedAt(Date.now() - elapsed)
+    }
+  }
+
+  return (
+    <div className="mt-auto pt-4">
+      <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-white/[0.04] bg-surface-200/70">
+        <Timer size={13} className="text-neutral-600 shrink-0" />
+        <time dateTime={`PT${seconds}S`} className="flex-1 text-xs font-mono tabular-nums text-neutral-400">
+          {display}
+        </time>
+        <button
+          onClick={toggle}
+          aria-label={running ? 'Pause timer' : 'Start timer'}
+          title={running ? 'Pause' : 'Start'}
+          className="p-1.5 rounded-md text-neutral-500 hover:bg-surface-400 hover:text-accent transition-colors"
+        >
+          {running ? <Pause size={12} /> : <Play size={12} />}
+        </button>
+        <button
+          onClick={() => { setElapsed(0); setStartedAt(null) }}
+          aria-label="Reset timer"
+          title="Reset"
+          disabled={elapsed === 0}
+          className="p-1.5 rounded-md text-neutral-600 hover:bg-surface-400 hover:text-neutral-300 disabled:opacity-30 transition-colors"
+        >
+          <RotateCcw size={12} />
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -39,7 +93,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         }
       })
     }
-  }, [user?.$id])
+  }, [user, projects.length, activeProject, setProjects, setActiveProject])
 
   // Load saved accent color on mount
   useEffect(() => {
@@ -71,14 +125,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       logger.info('LAYOUT', `Created project: ${project.name}`)
     } catch (err: any) {
       logger.error('LAYOUT', 'Failed to create project', err)
+      alert(err?.message || 'Failed to create project')
     }
   }
 
-  async function handleDeleteProject(id: string, _e: React.MouseEvent) {
+  async function handleDeleteProject(id: string) {
     if (!confirm('Delete this project?')) return
-    removeProject(id)
-    if (activeProject === id) setActiveProject(null)
-    try { await deleteProject(id) } catch {}
+    try {
+      await deleteProject(id)
+      removeProject(id)
+      if (activeProject === id) setActiveProject(null)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to delete project')
+    }
   }
 
   function startEditProject(project: { $id: string; name: string; color: string }) {
@@ -118,7 +177,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto scrollbar-thin">
+        <nav className="flex flex-1 flex-col gap-1 py-4 px-3 overflow-y-auto scrollbar-thin">
           {/* Parking */}
           <Link href="/app/parking"
             className={cn(
@@ -209,18 +268,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
                       <span className="truncate flex-1 text-left">{p.name}</span>
                       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span
+                        <button
+                          type="button"
+                          aria-label={`Edit ${p.name}`}
                           onClick={(e) => { e.stopPropagation(); startEditProject(p) }}
                           className="p-1 rounded hover:bg-surface-400 text-neutral-600 hover:text-accent cursor-pointer"
                         >
                           <Pencil size={10} />
-                        </span>
-                        <span
-                          onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.$id, e as any) }}
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`Delete ${p.name}`}
+                          onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.$id) }}
                           className="p-1 rounded hover:bg-red-500/10 text-neutral-600 hover:text-red-400 cursor-pointer"
                         >
                           <Trash2 size={10} />
-                        </span>
+                        </button>
                       </div>
                     </div>
                   )
@@ -265,6 +328,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {isSettingsPage && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-accent animate-glow-pulse" />}
           </Link>
 
+          <SidebarTimer />
         </nav>
 
         {/* User */}

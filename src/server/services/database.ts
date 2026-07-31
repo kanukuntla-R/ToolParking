@@ -117,6 +117,13 @@ export class DatabaseService {
     const record = await pb.collection('tools').getOne(toolId)
     if (record.userId !== userId) throw new Error('Tool not found or unauthorized')
 
+    const stackItems = await pb.collection('stack_items').getList(1, 500, {
+      filter: `toolId = "${toolId}"`,
+    })
+    for (const item of stackItems.items) {
+      await pb.collection('stack_items').delete(item.id)
+    }
+
     await pb.collection('tools').delete(toolId)
     logger.info('DB', `deleteTool: ${toolId}`)
   }
@@ -226,6 +233,13 @@ export class DatabaseService {
     const tool = await pb.collection('tools').getOne(toolId)
     if (tool.userId !== userId && tool.isPublic !== true) {
       throw new Error('Tool not found or unauthorized')
+    }
+
+    const existing = await pb.collection('stack_items').getList(1, 1, {
+      filter: `projectId = "${projectId}" && toolId = "${toolId}"`,
+    })
+    if (existing.totalItems > 0) {
+      throw new Error('Validation failed: Tool is already in this project')
     }
 
     const record = await pb.collection('stack_items').create({

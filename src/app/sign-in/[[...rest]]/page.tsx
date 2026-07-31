@@ -40,7 +40,7 @@ export default function SignInPage() {
                 footerPoweredBy: 'hidden',
               },
             }}
-            redirectUrl="/app/parking"
+            fallbackRedirectUrl="/app/parking"
             signUpUrl="/sign-up"
           />
         </div>
