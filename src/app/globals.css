@@ -56,6 +56,32 @@
     --scrollbar-thumb-hover: rgb(var(--accent) / 0.38);
   }
 
+  /* Pixel Drift: inspired by the supplied chromatic spacecraft artwork. */
+  html.pixel-drift {
+    color-scheme: dark;
+    --bg-primary: 4 3 5;
+    --bg-secondary: 9 8 11;
+    --bg-card: 16 14 17;
+    --bg-card-hover: 23 20 23;
+    --bg-input: 20 17 20;
+    --bg-surface-200: 21 18 21;
+    --bg-surface-300: 29 25 29;
+    --bg-surface-400: 40 34 38;
+    --bg-surface-500: 54 45 50;
+
+    --text-primary: 255 244 228;
+    --text-secondary: 194 181 173;
+    --text-muted: 132 120 119;
+    --text-faint: 82 72 76;
+
+    --border-subtle: rgba(255, 205, 147, 0.09);
+    --border-accent: rgba(255, 185, 102, 0.13);
+    --border-accent-hover: rgba(255, 185, 102, 0.25);
+
+    --scrollbar-thumb: #352a30;
+    --scrollbar-thumb-hover: rgba(255, 185, 102, 0.42);
+  }
+
   /* Light theme text color overrides */
   html.light .text-neutral-200 { color: rgb(23 23 23); }
   html.light .text-neutral-300 { color: rgb(64 64 64); }
@@ -98,6 +124,10 @@
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
+  html.pixel-drift body {
+    background: #040305;
+  }
+
   ::selection {
     background: rgb(var(--accent) / 0.25);
     color: #f0fdf4;
@@ -129,6 +159,174 @@
   .glass-card:hover {
     background: rgba(var(--bg-card-hover), 0.7);
     border-color: var(--border-accent-hover);
+  }
+
+  html.pixel-drift .theme-shell {
+    isolation: isolate;
+    background: #040305;
+  }
+
+  html.pixel-drift .theme-shell::before,
+  html.pixel-drift .theme-shell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  html.pixel-drift .theme-shell::before {
+    z-index: 0;
+    background-image: url('/themes/pixel-drift.webp');
+    background-position: center 62%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    opacity: 0.34;
+    filter: saturate(1.18) contrast(1.08);
+    animation: pixel-drift 18s ease-in-out infinite alternate;
+  }
+
+  html.pixel-drift .theme-shell::after {
+    z-index: 1;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 3px,
+      rgba(255, 255, 255, 0.018) 4px
+    );
+    background-size: 100% 4px;
+    mix-blend-mode: screen;
+    animation: pixel-scan 8s linear infinite;
+  }
+
+  html.pixel-drift .glass {
+    background: rgba(8, 7, 10, 0.82);
+    border-color: rgba(255, 185, 102, 0.15);
+    box-shadow: inset 1px 0 rgba(86, 221, 255, 0.04), inset -1px 0 rgba(255, 91, 137, 0.04);
+  }
+
+  html.pixel-drift .glass-card {
+    background: rgba(14, 12, 15, 0.78);
+    border-color: rgba(255, 205, 147, 0.1);
+  }
+
+  html.pixel-drift .glass-card:hover {
+    background: rgba(22, 18, 21, 0.86);
+    border-color: rgba(255, 185, 102, 0.22);
+  }
+
+  .pixel-brand-mark {
+    display: none;
+  }
+
+  html.pixel-drift .app-sidebar {
+    background: rgba(8, 7, 10, 0.88);
+    box-shadow: 12px 0 48px rgba(255, 130, 62, 0.08);
+  }
+
+  html.pixel-drift .app-sidebar::after {
+    content: '';
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 1px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent 4%, rgba(86, 221, 255, 0.34) 34%, rgba(255, 185, 102, 0.65) 62%, rgba(255, 91, 137, 0.3) 82%, transparent 96%);
+  }
+
+  html.pixel-drift .pixel-brand-mark {
+    display: block;
+    position: absolute;
+    right: 18px;
+    width: 4px;
+    height: 4px;
+    background: #ffe4b8;
+    box-shadow: 6px 0 #ffb35f, 0 6px #56ddff, 6px 6px #ff5b89;
+    animation: pixel-blink 2.4s steps(2, end) infinite;
+  }
+
+  html.pixel-drift .app-header {
+    position: relative;
+  }
+
+  html.pixel-drift .app-header,
+  html.pixel-drift .app-footer {
+    overflow: hidden;
+  }
+
+  html.pixel-drift .app-sidebar .app-footer {
+    position: relative;
+  }
+
+  html.pixel-drift .app-header {
+    background: rgba(8, 7, 10, 0.88);
+    box-shadow: 0 12px 40px rgba(255, 130, 62, 0.05);
+  }
+
+  html.pixel-drift .app-header::after,
+  html.pixel-drift .app-footer::before {
+    content: '';
+    position: absolute;
+    pointer-events: none;
+    height: 1px;
+    width: 28%;
+    background: linear-gradient(90deg, transparent, rgba(86, 221, 255, 0.72), rgba(255, 224, 180, 0.9), rgba(255, 91, 137, 0.65), transparent);
+    animation: pixel-rail 7s linear infinite;
+  }
+
+  html.pixel-drift .app-header::after {
+    bottom: 0;
+    left: -28%;
+  }
+
+  html.pixel-drift .app-footer {
+    background: rgba(8, 7, 10, 0.9);
+    box-shadow: 0 -12px 40px rgba(255, 130, 62, 0.06);
+  }
+
+  html.pixel-drift .app-footer::before {
+    top: 0;
+    left: -28%;
+    animation-delay: -3.5s;
+  }
+
+  html.pixel-drift .glow-green,
+  html.pixel-drift .glow-green-sm {
+    box-shadow:
+      2px 0 rgba(86, 221, 255, 0.08),
+      -2px 0 rgba(255, 91, 137, 0.08),
+      0 0 24px rgb(var(--accent) / 0.15);
+  }
+
+  html.pixel-drift h1,
+  html.pixel-drift h2 {
+    text-shadow: 1px 0 rgba(86, 221, 255, 0.14), -1px 0 rgba(255, 91, 137, 0.12);
+  }
+
+  @keyframes pixel-drift {
+    0% { transform: scale(1.03) translate3d(-0.35%, 0, 0); }
+    55% { transform: scale(1.06) translate3d(0.4%, -0.35%, 0); }
+    100% { transform: scale(1.04) translate3d(0, 0.4%, 0); }
+  }
+
+  @keyframes pixel-scan {
+    to { background-position: 0 32px; }
+  }
+
+  @keyframes pixel-rail {
+    to { transform: translateX(460%); }
+  }
+
+  @keyframes pixel-blink {
+    50% { opacity: 0.35; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html.pixel-drift .theme-shell::before,
+    html.pixel-drift .theme-shell::after,
+    html.pixel-drift .app-header::after,
+    html.pixel-drift .app-footer::before,
+    html.pixel-drift .pixel-brand-mark {
+      animation: none;
+    }
   }
 
   /* Glow effects */

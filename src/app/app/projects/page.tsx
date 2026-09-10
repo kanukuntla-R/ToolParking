@@ -269,7 +269,7 @@ export default function ProjectsPage() {
         {/* ===== MOBILE: Project selector + tab switcher ===== */}
         <div className="md:hidden shrink-0">
           {/* Project header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.04] glass">
+          <div className="app-header flex items-center justify-between px-4 py-3 border-b border-white/[0.04] glass">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               {currentProject && (
                 <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: currentProject.color }} />
@@ -374,7 +374,7 @@ export default function ProjectsPage() {
           mobileTab === 'stack' || mobileTab === 'notes' ? 'flex' : 'hidden md:flex'
         )}>
           {/* Desktop project selector header */}
-          <div className="hidden md:flex items-center justify-between px-6 py-4 border-b border-white/[0.04] glass">
+          <div className="app-header hidden md:flex items-center justify-between px-6 py-4 border-b border-white/[0.04] glass">
             <div className="flex items-center gap-4">
               {currentProject && (
                 <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: currentProject.color }} />

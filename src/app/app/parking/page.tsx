@@ -59,7 +59,7 @@ export default function ParkingPage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-white/[0.04] glass shrink-0">
+      <div className="app-header flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-white/[0.04] glass shrink-0">
         <div>
           <h1 className="text-base font-semibold text-white">Tool Parking</h1>
           <p className="text-xs text-neutral-600 mt-0.5 font-mono">{tools.length} tools parked</p>

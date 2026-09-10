@@ -46,7 +46,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   try {
                     // Initialize theme
                     var theme = localStorage.getItem('theme');
-                    if (theme === 'light') {
+                    if (theme === 'pixel-drift') {
+                      document.documentElement.classList.add('pixel-drift');
+                    } else if (theme === 'light') {
                       document.documentElement.classList.add('light');
                     } else if (theme === 'system') {
                       if (window.matchMedia('(prefers-color-scheme: light)').matches) {

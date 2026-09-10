@@ -162,14 +162,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isSettingsPage = pathname.startsWith('/app/settings')
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface relative">
+    <div className="theme-shell flex h-screen overflow-hidden bg-surface relative">
       {/* Subtle grid background */}
       <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-30 pointer-events-none" />
 
       {/* ===== DESKTOP SIDEBAR (hidden on mobile) ===== */}
-      <aside className="hidden md:flex w-60 flex-col glass shrink-0 z-10 relative">
+      <aside className="app-sidebar hidden md:flex w-60 flex-col glass shrink-0 z-10 relative">
         {/* Logo */}
-        <div className="flex items-center gap-3 px-4 h-16 border-b border-white/[0.04]">
+        <div className="app-brand relative flex items-center gap-3 px-4 h-16 border-b border-white/[0.04]">
+          <span aria-hidden="true" className="pixel-brand-mark" />
           <div className="flex-1 min-w-0">
             <span className="text-sm font-semibold text-white block leading-tight">Tool Parking</span>
             <span className="text-[10px] text-neutral-600 font-mono">v1.0</span>
@@ -332,7 +333,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* User */}
-        <div className="border-t border-white/[0.04] p-3 space-y-1">
+        <div className="app-footer border-t border-white/[0.04] p-3 space-y-1">
           <div className="flex items-center gap-3 px-3 py-2 rounded-xl">
             <div className="w-7 h-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
               <User size={13} className="text-accent" />
@@ -355,7 +356,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* ===== MOBILE BOTTOM NAV (hidden on desktop) ===== */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-white/[0.06] pb-safe">
+      <nav className="app-footer md:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-white/[0.06] pb-safe">
         <div className="flex items-center justify-around px-4 h-14">
           <Link href="/app/parking"
             className={cn(
