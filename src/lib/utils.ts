@@ -58,16 +58,3 @@ export const CATEGORY_COLORS: Record<ToolCategory, { bg: string; text: string }>
 }
 
 export const ALL_LANES: StackLane[] = ['Frontend', 'Backend', 'Database', 'DevOps', 'Auth', 'Other']
-
-export const SEED_TOOLS = [
-  { name: 'Next.js',       description: 'React framework for production', categories: ['frontend' as ToolCategory],  url: 'https://nextjs.org',       icon: '▲', color: '#000000', tags: ['react', 'ssr', 'vercel'], isPublic: true },
-  { name: 'Tailwind CSS',  description: 'Utility-first CSS framework',    categories: ['ui' as ToolCategory],        url: 'https://tailwindcss.com',  icon: '◈', color: '#06B6D4', tags: ['css', 'styling'],         isPublic: true },
-  { name: 'Supabase',      description: 'Open source Firebase alternative', categories: ['database' as ToolCategory, 'auth' as ToolCategory, 'backend' as ToolCategory], url: 'https://supabase.com',     icon: '⬡', color: '#3ECF8E', tags: ['postgres', 'realtime'],   isPublic: true },
-  { name: 'Appwrite',      description: 'Backend platform for developers', categories: ['auth' as ToolCategory, 'backend' as ToolCategory, 'database' as ToolCategory],  url: 'https://appwrite.io',      icon: 'A', color: '#FD366E', tags: ['baaS', 'auth', 'storage'], isPublic: true },
-  { name: 'Drizzle ORM',   description: 'TypeScript ORM',                 categories: ['database' as ToolCategory],  url: 'https://orm.drizzle.team', icon: '◆', color: '#C5F74F', tags: ['orm', 'sql'],             isPublic: true },
-  { name: 'Vercel',        description: 'Deploy web projects instantly',   categories: ['devops' as ToolCategory],   url: 'https://vercel.com',       icon: '▲', color: '#000000', tags: ['hosting', 'cdn'],         isPublic: true },
-  { name: 'Clerk',         description: 'Authentication for the web',      categories: ['auth' as ToolCategory],     url: 'https://clerk.com',        icon: '⚿', color: '#6C47FF', tags: ['auth', 'oauth'],          isPublic: true },
-  { name: 'shadcn/ui',     description: 'Reusable component library',      categories: ['ui' as ToolCategory],       url: 'https://ui.shadcn.com',    icon: '□', color: '#000000', tags: ['components', 'react'],    isPublic: true },
-  { name: 'tRPC',          description: 'End-to-end typesafe APIs',        categories: ['backend' as ToolCategory],  url: 'https://trpc.io',          icon: '⟳', color: '#2596BE', tags: ['api', 'typescript'],      isPublic: true },
-  { name: 'PlanetScale',   description: 'Serverless MySQL platform',       categories: ['database' as ToolCategory], url: 'https://planetscale.com',  icon: '◎', color: '#000000', tags: ['mysql', 'serverless'],    isPublic: true },
-]

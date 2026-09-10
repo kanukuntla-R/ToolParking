@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger'
 
 export class ToolController {
   static async list(userId: string): Promise<Tool[]> {
+    await DatabaseService.seedDefaults()
     return await DatabaseService.getTools(userId)
   }
 

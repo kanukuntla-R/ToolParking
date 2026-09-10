@@ -2,22 +2,22 @@ import type { Tool, ToolDraft, ToolCategory, Project, ProjectDraft, StackItem, S
 import { DEFAULT_TOOLS } from '@/lib/seed-data'
 import { logger } from '@/lib/logger'
 import { getAdminClient } from '@/lib/pocketbase'
+import { isSameTool } from '@/lib/tool-identity'
+
+const DEFAULT_TOOL_OWNER = '__tool_parking_defaults__'
 
 export class DatabaseService {
   // ─── Seed Management ─────────────────────────────────────────────────────
-  static async seedDefaults(userId: string): Promise<void> {
+  static async seedDefaults(): Promise<void> {
     const pb = await getAdminClient()
 
-    const existing = await pb.collection('tools').getList(1, 1, {
-      filter: `userId = "${userId}"`,
+    const existing = await pb.collection('tools').getList(1, 500, {
+      filter: `userId = "${DEFAULT_TOOL_OWNER}" && isDefault = true`,
     })
 
-    if (existing.totalItems > 0) {
-      logger.info('SEED', `User ${userId} already has ${existing.totalItems} tools, skipping seed`)
-      return
-    }
-
     for (const tool of DEFAULT_TOOLS) {
+      if (existing.items.some((record) => isSameTool(tool, { name: record.name, url: record.url }))) continue
+
       await pb.collection('tools').create({
         name: tool.name,
         description: tool.description,
@@ -26,13 +26,13 @@ export class DatabaseService {
         icon: tool.icon,
         color: tool.color,
         tags: tool.tags,
-        userId,
-        isPublic: tool.isPublic,
+        userId: DEFAULT_TOOL_OWNER,
+        isPublic: true,
         isDefault: true,
       })
     }
 
-    logger.info('SEED', `Seeded ${DEFAULT_TOOLS.length} default tools for user ${userId}`)
+    logger.info('SEED', 'Default tool catalog is ready')
   }
 
   // ─── Tools ───────────────────────────────────────────────────────────────
@@ -72,6 +72,8 @@ export class DatabaseService {
   static async createTool(userId: string, draft: ToolDraft): Promise<Tool> {
     const pb = await getAdminClient()
 
+    await this.assertUniqueTool(pb, userId, draft)
+
     const record = await pb.collection('tools').create({
       userId,
       name: draft.name.trim(),
@@ -104,6 +106,11 @@ export class DatabaseService {
 
     const record = await pb.collection('tools').getOne(toolId)
     if (record.userId !== userId) throw new Error('Tool not found or unauthorized')
+
+    await this.assertUniqueTool(pb, userId, {
+      name: data.name ?? record.name,
+      url: data.url ?? record.url,
+    }, toolId)
 
     const updated = await pb.collection('tools').update(toolId, updateData)
 
@@ -313,6 +320,22 @@ export class DatabaseService {
   }
 
   // ─── Helper Methods ──────────────────────────────────────────────────────
+  private static async assertUniqueTool(
+    pb: Awaited<ReturnType<typeof getAdminClient>>,
+    userId: string,
+    candidate: Pick<ToolDraft, 'name'> & Partial<Pick<ToolDraft, 'url'>>,
+    excludeId?: string
+  ): Promise<void> {
+    const visible = await pb.collection('tools').getList(1, 500, {
+      filter: `userId = "${userId}" || isPublic = true`,
+    })
+    const duplicate = visible.items.find((record) =>
+      record.id !== excludeId && isSameTool(candidate, { name: record.name, url: record.url })
+    )
+
+    if (duplicate) throw new Error(`Validation failed: "${duplicate.name}" is already in your tool library`)
+  }
+
   private static mapTool(record: Record<string, unknown>): Tool {
     return {
       $id: record.id as string,

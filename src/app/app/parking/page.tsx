@@ -46,7 +46,7 @@ export default function ParkingPage() {
     return tools.filter((t) => {
       let matchCat = true
       if (activeFilter === 'mine') {
-        matchCat = !t.isDefault
+        matchCat = t.userId === user?.$id && !t.isDefault
       } else if (activeFilter !== 'all') {
         matchCat = t.categories?.includes(activeFilter as ToolCategory) ?? false
       }
@@ -54,7 +54,7 @@ export default function ParkingPage() {
       const matchSearch = !q || t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q) || t.tags.some((tag) => tag.includes(q))
       return matchCat && matchSearch
     })
-  }, [tools, activeFilter, searchQuery])
+  }, [tools, activeFilter, searchQuery, user?.$id])
 
   return (
     <div className="flex flex-col h-full overflow-hidden">

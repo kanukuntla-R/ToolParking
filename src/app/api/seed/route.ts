@@ -11,8 +11,7 @@ export async function POST(request: NextRequest) {
     const authResult = await authMiddleware(request)
     if (authResult instanceof NextResponse) return authResult
     
-    const { userId } = authResult
-    await DatabaseService.seedDefaults(userId)
+    await DatabaseService.seedDefaults()
     
     return NextResponse.json({ 
       success: true, 

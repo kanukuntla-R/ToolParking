@@ -64,6 +64,12 @@ Open [http://localhost:3000](http://localhost:3000)
 | isPublic | bool | no |
 | isDefault | bool | no |
 
+Indexes:
+
+```sql
+CREATE UNIQUE INDEX idx_tools_user_name ON tools (userId, name COLLATE NOCASE)
+```
+
 **projects**
 | Field | Type | Required |
 |-------|------|----------|
@@ -81,6 +87,12 @@ Open [http://localhost:3000](http://localhost:3000)
 | lane | text | yes |
 | order | number | yes |
 | userId | text | yes |
+
+Index:
+
+```sql
+CREATE UNIQUE INDEX idx_stack_project_tool ON stack_items (projectId, toolId)
+```
 
 5. Set the env vars in `.env.local`:
    ```

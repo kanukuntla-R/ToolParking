@@ -1,6 +1,6 @@
 'use client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useAppStore } from '@/store'
 import { logger } from '@/lib/logger'
@@ -12,8 +12,6 @@ const queryClient = new QueryClient({
 function AuthBootstrap() {
   const setUser = useAppStore((s) => s.setUser)
   const { user: clerkUser, isLoaded } = useUser()
-  const seededRef = useRef(false)
-
   useEffect(() => {
     if (!isLoaded || !clerkUser) return
     
@@ -25,21 +23,6 @@ function AuthBootstrap() {
     
     setUser(appUser)
     logger.info('BOOT', `User set: ${appUser.name} (${appUser.$id})`)
-
-    // Seed default tools via API (only once)
-    if (!seededRef.current) {
-      seededRef.current = true
-      fetch('/api/seed', { method: 'POST' })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            logger.info('BOOT', 'Default tools seeded')
-          }
-        })
-        .catch((err) => {
-          logger.error('BOOT', 'Failed to seed default tools', err)
-        })
-    }
   }, [isLoaded, clerkUser, setUser])
 
   return null
